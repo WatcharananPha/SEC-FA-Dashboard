@@ -12,17 +12,15 @@ def load_and_prepare_data(file_path):
     df = pd.read_csv(file_path, encoding='utf-8')
     df.columns = df.columns.str.strip()
 
-    # --- Optimization: Direct B.E. Year Extraction ---
-    # Directly extract the 4-digit B.E. year from the string, which is much faster.
     df['RenewalYearBE'] = pd.to_numeric(df['วันครบอายุเห็นชอบ'].str.split('/').str[-1], errors='coerce').fillna(0).astype(int)
 
-    # Convert other date columns to datetime for calculations (ProcessingDays, etc.)
-    date_cols = ['วันที่ยื่นคำขอ', 'วันที่ตรวจประวัติ', 'วันที่อนุญาต']
-    for col in date_cols:
+    expiry_date_ad = pd.to_datetime(df['วันครบอายุเห็นชอบ'], format='%d/%m/%Y', errors='coerce') - pd.DateOffset(years=543)
+    df['CountdownStartDateBE'] = (expiry_date_ad - pd.DateOffset(days=45) + pd.DateOffset(years=543)).dt.strftime('%d/%m/%Y')
+
+    date_cols_to_convert = ['วันที่ยื่นคำขอ', 'วันที่ตรวจประวัติ', 'วันที่อนุญาต']
+    for col in date_cols_to_convert:
         if col in df.columns:
-            # Convert B.E. dates to A.D. for datetime calculations
-            date_series = pd.to_datetime(df[col], format='%d/%m/%Y', errors='coerce')
-            df[col] = date_series - pd.DateOffset(years=543)
+            df[col] = pd.to_datetime(df[col], format='%d/%m/%Y', errors='coerce') - pd.DateOffset(years=543)
 
     df['ให้ความเห็นชอบ FA (แบบ FA-1)'] = df['ให้ความเห็นชอบ FA'].str.split('\n').str[0].str.replace('"', '').str.strip()
     df['ApplicationTypeClean'] = np.where(df['ให้ความเห็นชอบ FA'].str.contains('เสมือนรายใหม่', na=False), 'เสมือนรายใหม่', df['ประเภทคำขอ'])
@@ -38,7 +36,6 @@ def load_and_prepare_data(file_path):
     stage_name_map = {'วันที่อนุญาต': 'ได้รับอนุญาต', 'วันที่ตรวจประวัติ': 'ตรวจประวัติ', 'วันที่ยื่นคำขอ': 'ยื่นคำขอ'}
     df['CurrentStage'] = df[stage_name_map.keys()].notna().idxmax(axis=1).map(stage_name_map).fillna('N/A')
     
-    df['DaysRemaining'] = 45 - df['ProcessingDays']
     df['SLA_Status'] = pd.cut(df['ProcessingDays'], bins=[-np.inf, 30, 45, np.inf], labels=['On Track', 'At Risk', 'Overdue'])
     
     df['Days_Submit_To_Check'] = (df['วันที่ตรวจประวัติ'] - df['วันที่ยื่นคำขอ']).dt.days
@@ -49,35 +46,40 @@ def load_and_prepare_data(file_path):
 file_path = "Dataset/FA-1 (ปี 2565)(Sheet1).csv"
 df_processed = load_and_prepare_data(file_path)
 
-st.subheader("แสดง Dashboard")
+st.subheader("FA Application Dashboard")
 top_col1, top_col2, top_col3 = st.columns([2, 3, 2])
 
-fa_type_options = ["ทั้งหมด"] + df_processed['คำนำหน้า'].dropna().unique().tolist()
-app_type_options = ["ทั้งหมด"] + df_processed['ApplicationTypeClean'].dropna().unique().tolist()
+with top_col1:
+    fa_type_options = ["ทั้งหมด"] + df_processed['คำนำหน้า'].dropna().unique().tolist()
+    fa_type_select = st.selectbox("เลือกประเภท FA", options=fa_type_options)
 
-fa_type_select = top_col1.selectbox("เลือกประเภท FA", options=fa_type_options)
-filter_type = top_col2.radio("ประเภทคำขอ:", options=app_type_options, horizontal=True)
+with top_col2:
+    app_type_options = ["ทั้งหมด"] + df_processed['ApplicationTypeClean'].dropna().unique().tolist()
+    filter_type = st.radio("ประเภทคำขอ:", options=app_type_options, horizontal=True)
+
 top_col3.markdown(f"<p style='text-align: right; font-weight: bold;'>วันที่ปัจจุบัน: {datetime.now().strftime('%d %b %Y')}</p>", unsafe_allow_html=True)
 
-df_filtered = df_processed.copy()
+df_filtered = df_processed
 if fa_type_select != "ทั้งหมด":
     df_filtered = df_filtered[df_filtered['คำนำหน้า'] == fa_type_select]
 if filter_type != "ทั้งหมด":
     df_filtered = df_filtered[df_filtered['ApplicationTypeClean'] == filter_type]
 
 st.markdown("---")
+
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 kpi1.metric(label="คำขอที่กำลังดำเนินการ", value=f"{(df_filtered['CurrentStage'] != 'ได้รับอนุญาต').sum()} รายการ")
-kpi2.metric(label="ใกล้ครบกำหนด (45 วัน)", value=f"{(df_filtered['SLA_Status'] == 'At Risk').sum()} รายการ")
+kpi2.metric(label="ใกล้ครบกำหนด (At Risk)", value=f"{(df_filtered['SLA_Status'] == 'At Risk').sum()} รายการ")
 kpi3.metric(label="บ. FA ที่จะต่ออายุปี 68", value=f"{(df_processed['RenewalYearBE'] == 2568).sum()} รายการ")
 kpi4.metric(label="ชำระค่าธรรมเนียมเสร็จสิ้น", value=f"{(df_filtered['PaymentStageStatus'] == 'ชำระครบ 2 ครั้ง').sum()} รายการ")
+
 st.markdown("---")
 
 col1, col2, col3 = st.columns([1, 2, 3])
 
 with col1:
-    st.selectbox("โชว์ status %", ["ตัวเลือก", "Item 1", "Item 2", "Item 3", "Item 4"])
-    st.selectbox("แสดงสถิติ : Quarter", ["ตัวเลือก", "Item 1", "Item 2", "Item 3", "Item 4"])
+    st.selectbox("Status % ", ["ตัวเลือก", "Item 1", "Item 2"])
+    st.selectbox("ไตรมาส", ["ตัวเลือก", "Item 1", "Item 2"])
 
 with col2:
     pie_col1, pie_col2 = st.columns(2)
@@ -89,15 +91,14 @@ with col2:
             st.plotly_chart(fig, use_container_width=True)
 
     with pie_col2:
-        st.subheader("The proportion of prefixes")
+        st.subheader("สัดส่วนประเภท FA")
         prefix_counts = df_filtered['คำนำหน้า'].value_counts()
         if not prefix_counts.empty:
             fig = px.pie(prefix_counts, names=prefix_counts.index, values=prefix_counts.values, hole=.3).update_traces(showlegend=False, textposition='inside', textinfo='percent+label').update_layout(margin=dict(l=10, r=10, t=20, b=20))
             st.plotly_chart(fig, use_container_width=True)
-    st.text_input("รายละเอียดเพิ่มเติม :", "")
 
 with col3:
-    st.subheader("Bar show 45 days progress")
+    st.subheader("สถานะระยะเวลาดำเนินการ (SLA 45 วัน)")
     pending_df = df_filtered.query("CurrentStage != 'ได้รับอนุญาต'").sort_values('ProcessingDays', ascending=True)
     if not pending_df.empty:
         fig = px.bar(pending_df, x='ProcessingDays', y='ให้ความเห็นชอบ FA (แบบ FA-1)', color='SLA_Status', orientation='h',
@@ -109,6 +110,7 @@ with col3:
         st.info("ไม่มีข้อมูลคำขอที่กำลังดำเนินการตามตัวกรองที่เลือก")
 
 st.markdown("---")
+
 details_col1, details_col2 = st.columns(2)
 
 with details_col1:
@@ -128,17 +130,50 @@ with details_col2:
         st.info("ไม่มีข้อมูลที่เสร็จสมบูรณ์เพียงพอสำหรับวิเคราะห์ Bottleneck")
 
 st.markdown("---")
-st.subheader("ตารางแสดงข้อมูลบริษัท")
 
+st.subheader("ตารางแสดงข้อมูลบริษัท")
 display_option = st.radio(
     "เลือกมุมมองข้อมูล:",
     ("รายชื่อ บ. ทั้งหมด", "บ. FA ที่จะต่ออายุปี 68"),
     horizontal=True,
+    key="data_display_option"
 )
 
 if display_option == "บ. FA ที่จะต่ออายุปี 68":
-    df_display = df_filtered[df_filtered['RenewalYearBE'] == 2568]
-else:
-    df_display = df_filtered
+    df_renewal = df_filtered[df_filtered['RenewalYearBE'] == 2568]
+    
+    if df_renewal.empty:
+        st.info("ไม่พบข้อมูลบริษัทที่จะต่ออายุในปี 2568 ตามตัวกรองที่เลือก")
+    else:
+        df_display = df_renewal.assign(
+            progress_percent=lambda df: pd.to_numeric(
+                df['dashboard'].str.replace('%', '', regex=False),
+                errors='coerce'
+            ).fillna(0).astype(int)
+        )
 
-st.dataframe(df_display)
+        st.dataframe(
+            df_display,
+            column_order=[
+                "ให้ความเห็นชอบ FA (แบบ FA-1)", 
+                "วันครบอายุเห็นชอบ", 
+                "progress_percent"
+            ],
+            column_config={
+                "ให้ความเห็นชอบ FA (แบบ FA-1)": st.column_config.TextColumn(
+                    "ชื่อบริษัท (FA)"
+                ),
+                "วันครบอายุเห็นชอบ": st.column_config.TextColumn(
+                    "วันครบอายุเห็นชอบ"
+                ),
+                "progress_percent": st.column_config.ProgressColumn(
+                    "ความคืบหน้าการดำเนินงาน",
+                    format="%d%%",
+                    min_value=0,
+                    max_value=100,
+                ),
+            },
+            use_container_width=True
+        )
+else:
+    st.dataframe(df_filtered, use_container_width=True)
