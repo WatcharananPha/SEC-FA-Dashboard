@@ -13,7 +13,6 @@ LOGO_PATH = "SEC_Thailand_Logo.svg.png"
 st.set_page_config(layout="wide", page_title="FA Approval Dashboard", page_icon=LOGO_PATH)
 
 st.markdown("""
-<script src="https://cdn.tailwindcss.com"></script>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
     :root {
@@ -26,49 +25,98 @@ st.markdown("""
         font-family: 'Sarabun', sans-serif; background-color: var(--background-color);
     }
     #MainMenu, footer, header { display: none; }
-    .main .block-container { padding: 1.5rem 2.5rem 2.5rem 2.5rem; }
-    .st-emotion-cache-1r6slb0, .st-emotion-cache-1kyxreq, [data-testid="stMetric"], .st-emotion-cache-1wivapv, .st-emotion-cache-1v0mbdj {
-        background-color: var(--container-bg-color); border: 1px solid var(--border-color);
-        border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-        padding: 1.25rem 1.5rem;
+    .main .block-container {
+        padding-top: 1rem; padding-bottom: 1rem; padding-left: 2.5rem; padding-right: 2.5rem;
     }
-    h3 { font-size: 1.1rem; font-weight: 600; color: var(--text-color-header);
-        padding-bottom: 0.75rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
-    .filter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-    .filter-header h6 { font-size: 0.95rem; font-weight: 600; color: var(--text-color-dark); margin-bottom: 0; }
-    .reset-button {
-        font-size: 0.8rem; color: var(--text-color-light); background-color: #F3F4F6;
-        border: 1px solid #E5E7EB; border-radius: 6px; padding: 2px 8px; cursor: pointer;
+    [data-testid="stHorizontalBlock"] {
+        align-items: center;
     }
-    .reset-button:hover { background-color: #E5E7EB; }
-    .stButton>button:not(.primary-button) {
-        border-radius: 9999px; background-color: #E5E7EB; color: var(--text-color-light);
-        border: none; font-weight: 600; transition: all 0.2s ease-in-out;
+    /* --- CSS for Radio as Button Group --- */
+    div[role="radiogroup"] {
+        display: flex;
+        background-color: #E5E7EB;
+        border-radius: 9999px;
+        padding: 3px;
+        width: fit-content;
     }
-    .stButton>button:hover:not(.primary-button) { background-color: #D1D5DB; }
-    .stButton>button.active-button {
-        background-color: var(--primary-color-light); color: var(--primary-color);
+    div[role="radiogroup"] label {
+        display: flex;
+        background-color: transparent;
+        color: var(--text-color-light);
+        border-radius: 9999px;
+        padding: 6px 16px;
+        margin: 0 !important;
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
     }
-    .stButton>button.primary-button {
-        background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: 600;
-    }
-    .stButton>button.primary-button:hover { background-color: #1D4ED8; }
-    [data-testid="stCheckbox"] p { font-size: 14px; color: var(--text-color-dark); }
-    .kpi-metric { text-align: left; }
-    .kpi-title { font-size: 0.9rem; font-weight: 600; color: var(--text-color-light); display: flex; align-items: center; gap: 8px; }
-    .kpi-value { font-size: 2rem; font-weight: 700; color: var(--text-color-header); margin-top: 4px; }
-    .kpi-icon { background-color: var(--primary-color-light); border-radius: 8px; padding: 6px; display: flex; align-items: center; justify-content: center; }
-    .kpi-icon svg { width: 20px; height: 20px; color: var(--primary-color); }
-    div[data-testid="stButton-ResetStatus"], div[data-testid="stButton-ResetQuarter"] {
+    div[role="radiogroup"] input[type="radio"] {
         display: none;
     }
-    /* Center logo vertically */
-    [data-testid="stImage"] {
-        margin-top: auto;
-        margin-bottom: auto;
+    div[role="radiogroup"] input[type="radio"]:checked + div {
+        background-color: var(--primary-color-light);
+        color: var(--primary-color);
     }
-</style>
-""", unsafe_allow_html=True)
+    /* --- End Radio CSS --- */
+    .st-emotion-cache-1r6slb0, [data-testid="stMetric"], .st-emotion-cache-1wivapv {
+        background-color: var(--container-bg-color); border: 1px solid var(--border-color);
+        border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+        padding: 1.25rem 1.5rem;
+    }
+    h3, h6 { color: var(--text-color-header); font-weight: 600; }
+    h3 { font-size: 1.1rem; padding-bottom: 0.75rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
+    h6 { font-size: 0.95rem; margin-bottom: 0.5rem; }
+    div[data-testid="stHorizontalBlock"] {
+        gap: 1.5rem; 
+    }
+
+    .kpi-metric { 
+        text-align: left;
+        background-color: var(--container-bg-color); 
+        border: 1px solid var(--border-color);
+        border-radius: 12px; 
+        padding: 1.25rem 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+        margin-bottom: 1.5rem; /* << เพิ่มบรรทัดนี้ */
+    }
+
+    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > div:first-child .st-emotion-cache-1r6slb0 {
+        margin-bottom: 1.5rem;
+    }
+    .kpi-title { 
+        font-size: 1.2rem; /* เพิ่มขนาดจาก 0.9rem */
+        font-weight: 600; 
+        color: var(--text-color-light); 
+        display: flex; 
+        align-items: center; 
+        gap: 10px;
+    }
+    .kpi-value { 
+        font-size: 2.5rem;
+        font-weight: 700; 
+        color: var(--text-color-header);
+        margin-top: 8px; 
+    }
+    .kpi-icon { 
+        background-color: var(--primary-color-light); 
+        border-radius: 10px; /* เพิ่มความโค้งมน */
+        padding: 10px; /* เพิ่มขนาดกรอบ */
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+    }
+    .kpi-icon svg { 
+        width: 24px; /* เพิ่มขนาดไอคอน */
+        height: 24px; /* เพิ่มขนาดไอคอน */
+        color: var(--primary-color); 
+    }
+</style> """, unsafe_allow_html=True)
+
+@st.cache_data
+def load_controller_data(file_path):
+    df_controller = pd.read_excel(file_path, engine='openpyxl')
+    df_controller.columns = df_controller.columns.str.strip()
+    return df_controller
 
 @st.cache_data
 def load_and_prepare_data(file_path):
@@ -199,6 +247,7 @@ def kpi_metric(title, value, icon_svg):
     </div>""", unsafe_allow_html=True)
 
 df_processed = load_and_prepare_data("testdata/FA-1 (ปี 2565)(test).xlsx")
+df_controller = load_controller_data("testdata\FA-2 (ปี 2565)(test).xlsx")
 
 if 'active_filter' not in st.session_state: st.session_state.active_filter = 'ทั้งหมด'
 if 'num_items_to_show' not in st.session_state: st.session_state.num_items_to_show = 2
@@ -215,8 +264,8 @@ with logo_col:
             f"""
             <style>
             .logo-container {{
-                width: 100px;
-                height: 100px;
+                width: 150px;
+                height: 150px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -249,16 +298,6 @@ def set_filter(filter_name): st.session_state.active_filter = filter_name
 with btn_c1: st.button('ทั้งหมด', on_click=set_filter, args=('ทั้งหมด',), use_container_width=True)
 with btn_c2: st.button('รายใหม่', on_click=set_filter, args=('รายใหม่',), use_container_width=True)
 with btn_c3: st.button('ต่ออายุ', on_click=set_filter, args=('ต่ออายุ',), use_container_width=True)
-with date_c:
-    st.date_input("Date/Time", value=None, label_visibility="collapsed")
-
-st.components.v1.html(f"""<script>
-    const buttons = window.parent.document.querySelectorAll('.stButton button:not(.primary-button)');
-    buttons.forEach(btn => {{
-        btn.classList.remove('active-button');
-        if (btn.innerText.trim() === '{st.session_state.active_filter}') {{ btn.classList.add('active-button'); }}
-    }});
-</script>""", height=0)
 
 st.markdown("<br>", unsafe_allow_html=True)
 left_col, right_col = st.columns([1, 2.8])
@@ -337,7 +376,7 @@ with left_col:
             fig = go.Figure(data=[go.Pie(labels=fa_type_counts.index, values=fa_type_counts.values, hole=.7,
                 marker=dict(colors=colors, line=dict(color='#ffffff', width=2)),
                 hoverinfo='label+value', textinfo='value', textposition='inside', showlegend=False, textfont_size=14)])
-            fig.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=220,
+            fig.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=280,
                 annotations=[dict(text=f'{fa_type_counts.sum()}', x=0.5, y=0.5, font_size=30, showarrow=False, font_color="#1F2937")])
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
             
@@ -345,11 +384,42 @@ with left_col:
                 st.markdown(f"""
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                         <span style="height: 10px; width: 10px; background-color: {color}; border-radius: 50%;"></span>
-                         <span style="font-size: 14px;">{fa_type}</span>
+                        <span style="height: 10px; width: 10px; background-color: {color}; border-radius: 50%;"></span>
+                        <span style="font-size: 14px;">{fa_type}</span>
                     </div>
                     <span style="font-size: 14px; font-weight: 600; color: var(--text-color-light);">{count}</span>
                 </div>""", unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.subheader("สถิติจำนวนผู้ควบคุม")
+        if not df_controller.empty and "คำนำหน้า" in df_controller.columns:
+            count_no_affiliation = (df_controller["คำนำหน้า"] == "ไร้สังกัด").sum()
+            count_with_affiliation = (df_controller["คำนำหน้า"] != "ไร้สังกัด").sum()
+
+            controller_counts = pd.Series({
+                "มีสังกัด": count_with_affiliation,
+                "ไร้สังกัด": count_no_affiliation
+            })
+            
+            fig_controller = go.Figure(go.Bar(
+                x=controller_counts.values,
+                y=controller_counts.index,
+                orientation='h',
+                marker_color='#6B7280',
+                text=controller_counts.values,
+                textposition='inside',
+                insidetextanchor='end',
+                textfont=dict(color='white', size=14)
+            ))
+            fig_controller.update_layout(
+                height=150,
+                margin=dict(t=10, b=10, l=10, r=10),
+                plot_bgcolor='rgba(0,0,0,0)',
+                xaxis=dict(visible=False),
+                yaxis=dict(autorange="reversed"),
+                showlegend=False
+            )
+            st.plotly_chart(fig_controller, use_container_width=True, config={'displayModeBar': False})
 
 with right_col:
     kpi1, kpi2, kpi3 = st.columns(3)
@@ -402,12 +472,49 @@ with right_col:
                 st.markdown("<div style='height:380px;display:flex;align-items:center;justify-content:center'><p class='text-center text-gray-500'>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
 
     with st.container(border=True):
-        st.subheader(f"รายชื่อ บ. FA ทั้งหมด")
+        st.subheader(f"รายชื่อ บ. FA ที่จะต่ออายุปี 2568 ทั้งหมด")
         df_display = df_processed if st.session_state.active_filter == 'ทั้งหมด' else df_filtered
-        st.dataframe(df_display, use_container_width=True, height=280, hide_index=True, column_config={
-            "ลำดับที่": st.column_config.NumberColumn("ลำดับที่", width="small"),
-            "คำนำหน้า": st.column_config.TextColumn("คำนำหน้า", width="small"),
-            "Company (FA)": st.column_config.TextColumn("Company (FA)", width="large"),
-            "ApplicationType": st.column_config.TextColumn("ประเภทคำขอ", width="medium"),
-            "progress_percent_raw": st.column_config.ProgressColumn("Progress", format="%d%%", min_value=0, max_value=100),
-        }, column_order=["ลำดับที่", "คำนำหน้า", "Company (FA)", "ApplicationType", "progress_percent_raw"])
+        
+        st.dataframe(
+            df_display,
+            use_container_width=True,
+            height=280,
+            hide_index=True,
+            column_config={
+                "ลำดับที่": st.column_config.NumberColumn(
+                    "ลำดับที่", 
+                    width="small"
+                ),
+                "คำนำหน้า": st.column_config.TextColumn(
+                    "คำนำหน้า",
+                    width="small"
+                ),
+                "Company (FA)": st.column_config.TextColumn(
+                    "Company (FA)", 
+                    width="large"
+                ),
+                "ApplicationType": st.column_config.TextColumn(
+                    "ประเภทคำขอ",
+                    width="medium"
+                ),
+                "วันที่ยื่นคำขอ": st.column_config.DateColumn(
+                    "วันที่ยื่นคำขอ",
+                    format="MM/DD/YYYY",
+                    width="medium"
+                ),
+                "progress_percent_raw": st.column_config.ProgressColumn(
+                    "Progress", 
+                    format="%d%%", 
+                    min_value=0, 
+                    max_value=100
+                ),
+            },
+            column_order=[
+                "ลำดับที่", 
+                "คำนำหน้า", 
+                "Company (FA)", 
+                "ApplicationType", 
+                "วันที่ยื่นคำขอ", 
+                "progress_percent_raw"
+            ]
+        )
