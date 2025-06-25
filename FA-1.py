@@ -1,10 +1,16 @@
+from turtle import width
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 from datetime import datetime
 
-st.set_page_config(layout="wide", page_title="FA Approval Dashboard", page_icon="SEC_Thailand_Logo.svg.png")
+import base64
+from pathlib import Path
+
+LOGO_PATH = "SEC_Thailand_Logo.svg.png"
+
+st.set_page_config(layout="wide", page_title="FA Approval Dashboard", page_icon=LOGO_PATH)
 
 st.markdown("""
 <script src="https://cdn.tailwindcss.com"></script>
@@ -55,6 +61,11 @@ st.markdown("""
     .kpi-icon svg { width: 20px; height: 20px; color: var(--primary-color); }
     div[data-testid="stButton-ResetStatus"], div[data-testid="stButton-ResetQuarter"] {
         display: none;
+    }
+    /* Center logo vertically */
+    [data-testid="stImage"] {
+        margin-top: auto;
+        margin-bottom: auto;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -111,7 +122,7 @@ class StepperBar:
         self.current_step = step
 
     def display(self):
-        html_parts = [f"<div style='display:flex; align-items:center; width:100%; font-family: Sarabun, sans-serif;'>"]
+        html_parts = ["<div style='display:flex; align-items:center; width:100%; font-family: Sarabun, sans-serif;'>"]
         for i, step_label in enumerate(self.steps):
             if i < self.current_step:
                 circle_bg, border, text_color = self.completed_color, self.completed_color, self.completed_color
@@ -137,43 +148,48 @@ class StepperBar:
         html_parts.append("</div>")
         return "".join(html_parts)
 
-def generate_application_list_html(df_ongoing, num_items_to_show, total_items):
-    df_to_show = df_ongoing.head(num_items_to_show)
-    if df_to_show.empty:
+def generate_application_list_html_optimized(df_ongoing, num_items_to_show, total_items):
+    if df_ongoing.empty:
         return "<div style='height: 300px; display: flex; align-items: center; justify-content: center;'><p class='text-center text-gray-500'>ไม่มีข้อมูลที่กำลังดำเนินการ</p></div>"
 
-    html_parts = ["<div class='flex flex-col space-y-8'>"]
-    steps = ['ยื่นคำขอ', 'พิจารณา', 'อนุมัติ']
-    stepper = StepperBar(steps=steps)
+    df_to_show = df_ongoing.head(num_items_to_show).copy()
 
-    for _, row in df_to_show.iterrows():
-        progress = row['progress_percent_raw']
-        current_step_index = 1 if 0 < progress < 100 else 2 if progress >= 100 else 0
-        stepper.set_current_step(current_step_index)
-        
+    conditions = [
+        df_to_show['progress_percent_raw'] >= 100,
+        df_to_show['progress_percent_raw'] > 0
+    ]
+    df_to_show['step_index'] = np.select(conditions, [2, 1], default=0)
+    df_to_show['expiry_date_formatted'] = df_to_show['วันครบอายุเห็นชอบ'].apply(format_thai_date)
+    
+    df_to_show.rename(columns={'Company (FA)': 'Company_FA'}, inplace=True)
+
+    stepper = StepperBar(steps=['ยื่นคำขอ', 'พิจารณา', 'อนุมัติ'])
+    html_items = []
+
+    for row in df_to_show.itertuples(index=False):
+        stepper.set_current_step(row.step_index)
         stepper_html = stepper.display()
-        expiry_date_formatted = format_thai_date(row['วันครบอายุเห็นชอบ'])
         
         info_box_html = f"""
         <div class="bg-gray-50 border border-gray-200 p-3 rounded-lg mt-4">
             <div class="flex justify-between items-center">
-                <span class="font-semibold text-sm text-gray-800">{row['Company (FA)']}</span>
-                <span class="font-mono text-sm text-gray-600">{expiry_date_formatted}</span>
+                <span class="font-semibold text-sm text-gray-800">{row.Company_FA}</span>
+                <span class="font-mono text-sm text-gray-600">{row.expiry_date_formatted}</span>
             </div>
         </div>"""
-        html_parts.append(f"<div>{stepper_html}{info_box_html}</div>")
-        
-    html_parts.append("</div>")
+        html_items.append(f"<div>{stepper_html}{info_box_html}</div>")
+
+    list_html = "<div class='flex flex-col space-y-8'>{}</div>".format("".join(html_items))
     
     if total_items > num_items_to_show:
-        html_parts.append("""
+        list_html += """
         <a href="?show_more=true" target="_self" style="display: block; text-decoration: none; margin-top: 1.5rem;">
             <div style="width: 100%; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: 600; padding: 0.5rem 1rem; text-align: center;">
                 เพิ่มเติม...
             </div>
-        </a>""")
+        </a>"""
         
-    return "".join(html_parts)
+    return list_html
 
 def kpi_metric(title, value, icon_svg):
     st.markdown(f"""
@@ -189,12 +205,47 @@ if 'num_items_to_show' not in st.session_state: st.session_state.num_items_to_sh
 if 'status_filters' not in st.session_state: st.session_state.status_filters = {0: False, 25: False, 50: False, 75: False, 100: False}
 if 'quarter_filters' not in st.session_state: st.session_state.quarter_filters = {1: False, 2: False, 3: False, 4: False, 'all': True}
 
-top_c1, top_c2, space, btn_c1, btn_c2, btn_c3, date_c = st.columns([1.5, 2, 0.5, 0.8, 0.8, 0.8, 1.5])
+logo_col, top_c1, top_c2, space, btn_c1, btn_c2, btn_c3, date_c = st.columns([0.8, 1.5, 2, 0.5, 0.8, 0.8, 0.8, 1.5])
+
+with logo_col:
+    if Path(LOGO_PATH).is_file():
+        b64_logo = base64.b64encode(Path(LOGO_PATH).read_bytes()).decode()
+
+        st.markdown(
+            f"""
+            <style>
+            .logo-container {{
+                width: 100px;
+                height: 100px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 12px;
+                padding: 5px;
+                background-color: var(--container-bg-color);
+                border: 1px solid var(--border-color);
+                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+            }}
+            .logo-container img {{
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+            }}
+            </style>
+            <div class="logo-container">
+                <img src="data:image/png;base64,{b64_logo}">
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
 with top_c1:
     fa_data_select = st.selectbox("FA Data", ["FA Data", "FA-1 (ปี 2565)"], index=1, label_visibility="collapsed")
 with top_c2:
     st.text_input("Dataset", value=fa_data_select, label_visibility="collapsed", disabled=True)
+
 def set_filter(filter_name): st.session_state.active_filter = filter_name
+
 with btn_c1: st.button('ทั้งหมด', on_click=set_filter, args=('ทั้งหมด',), use_container_width=True)
 with btn_c2: st.button('รายใหม่', on_click=set_filter, args=('รายใหม่',), use_container_width=True)
 with btn_c3: st.button('ต่ออายุ', on_click=set_filter, args=('ต่ออายุ',), use_container_width=True)
@@ -213,26 +264,57 @@ st.markdown("<br>", unsafe_allow_html=True)
 left_col, right_col = st.columns([1, 2.8])
 
 with left_col: 
-    def reset_status_filters():
-        st.session_state.status_filters = {k: False for k in st.session_state.status_filters}
-    st.markdown('<div class="filter-header"><h6>Status % คำขอ</h6><button class="reset-button" onclick="window.parent.document.querySelector(\'div[data-testid=\\"stButton-ResetStatus\\"] button\').click()">Reset</button></div>', unsafe_allow_html=True)
-    st.session_state.status_filters[0] = st.checkbox('ดำเนินการ 0 %', value=st.session_state.status_filters.get(0, False), key='status_0')
-    st.session_state.status_filters[25] = st.checkbox('ดำเนินการ 25 %', value=st.session_state.status_filters.get(25, False), key='status_25')
-    st.session_state.status_filters[50] = st.checkbox('ดำเนินการ 50 %', value=st.session_state.status_filters.get(50, False), key='status_50')
-    st.session_state.status_filters[75] = st.checkbox('ดำเนินการ 75 %', value=st.session_state.status_filters.get(75, False), key='status_75')
-    st.session_state.status_filters[100] = st.checkbox('ดำเนินการเสร็จสิ้น', value=st.session_state.status_filters.get(100, False), key='status_100')
-    st.button("ResetStatus", on_click=reset_status_filters, key="ResetStatus")
+    st.markdown("<h6>Status % คำขอ</h6>", unsafe_allow_html=True)
+    status_options = {
+        'ดำเนินการ 0 %': 0,
+        'ดำเนินการ 25 %': 25,
+        'ดำเนินการ 50 %': 50,
+        'ดำเนินการ 75 %': 75,
+        'ดำเนินการเสร็จสิ้น': 100
+    }
 
-    def reset_quarter_filters():
-        st.session_state.quarter_filters = {k: False for k in st.session_state.quarter_filters}
-        st.session_state.quarter_filters['all'] = True
-    st.markdown('<div class="filter-header" style="margin-top: 1.5rem;"><h6>สถิติแบ่งตาม Quarter</h6><button class="reset-button" onclick="window.parent.document.querySelector(\'div[data-testid=\\"stButton-ResetQuarter\\"] button\').click()">Reset</button></div>', unsafe_allow_html=True)
-    st.session_state.quarter_filters[1] = st.checkbox('Quarter 1', value=st.session_state.quarter_filters.get(1, False), key='q1')
-    st.session_state.quarter_filters[2] = st.checkbox('Quarter 2', value=st.session_state.quarter_filters.get(2, False), key='q2')
-    st.session_state.quarter_filters[3] = st.checkbox('Quarter 3', value=st.session_state.quarter_filters.get(3, False), key='q3')
-    st.session_state.quarter_filters[4] = st.checkbox('Quarter 4', value=st.session_state.quarter_filters.get(4, False), key='q4')
-    st.session_state.quarter_filters['all'] = st.checkbox('ทั้งหมด', value=st.session_state.quarter_filters.get('all', True), key='q_all')
-    st.button("ResetQuarter", on_click=reset_quarter_filters, key="ResetQuarter")
+    selected_labels = st.multiselect(
+        'Filter by Status %',
+        options=list(status_options.keys()),
+        placeholder="เลือกสถานะคำขอ...",
+        label_visibility="collapsed"
+    )
+
+    selected_values = [status_options[label] for label in selected_labels]
+
+    st.markdown("<h6 style='margin-top: 1rem;'>สถิติแบ่งตาม Quarter</h6>", unsafe_allow_html=True)
+
+    quarter_options = {
+        'ทั้งหมด': 'all',
+        'Quarter 1': 1,
+        'Quarter 2': 2,
+        'Quarter 3': 3,
+        'Quarter 4': 4
+    }
+
+    default_selection = []
+    if st.session_state.quarter_filters.get('all', True):
+        default_selection.append('ทั้งหมด')
+    else:
+        reverse_quarter_map = {v: k for k, v in quarter_options.items()}
+        for key, selected in st.session_state.quarter_filters.items():
+            if selected and key != 'all':
+                default_selection.append(reverse_quarter_map.get(key))
+
+    selected_labels = st.multiselect(
+        'Filter by Quarter',
+        options=list(quarter_options.keys()),
+        default=default_selection,
+        placeholder="เลือก Quarter...",
+        label_visibility="collapsed"
+    )
+
+    selected_values = [quarter_options[label] for label in selected_labels]
+    is_all_selected = 'all' in selected_values or not selected_values
+    st.session_state.quarter_filters['all'] = is_all_selected
+
+    for i in range(1, 5):
+        st.session_state.quarter_filters[i] = (not is_all_selected) and (i in selected_values)
 
     df_filtered = df_processed.copy()
     if st.session_state.active_filter != 'ทั้งหมด':
@@ -271,23 +353,23 @@ with left_col:
 
 with right_col:
     kpi1, kpi2, kpi3 = st.columns(3)
-    with kpi1: kpi_metric("คำขอที่กำลังดำเนินการ", (df_filtered['CurrentStage'] != 'ได้รับอนุญาต').sum(), '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C6.34 4.016 5.25 5.282 5.25 6.608v11.285c0 1.326 1.09 2.592 2.421 2.592h8.108a2.25 2.25 0 002.25-2.25v-4.874c0-.67-.283-1.278-.744-1.693l-4.16-4.162" /></svg>')
+    with kpi1: kpi_metric("คำขอที่กำลังดำเนินการ", (df_filtered['progress_percent_raw'] < 100).sum(), '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C6.34 4.016 5.25 5.282 5.25 6.608v11.285c0 1.326 1.09 2.592 2.421 2.592h8.108a2.25 2.25 0 002.25-2.25v-4.874c0-.67-.283-1.278-.744-1.693l-4.16-4.162" /></svg>')
     with kpi2:
         today = pd.to_datetime(datetime.now().date())
         due_soon_count = (df_filtered["วันครบอายุเห็นชอบ"].notna() & (df_filtered["วันครบอายุเห็นชอบ"] <= today + pd.Timedelta(days=45))).sum()
         kpi_metric("ใกล้ครบกำหนด 45 วัน", due_soon_count, '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>')
-    with kpi3: kpi_metric("บริษัท FA. ที่จะต่ออายุปี 2568", (df_processed['RenewalYearBE'] == 2568).sum(), '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m-3-1l-3-1m-3 1l-3 1" /></svg>')
-
+    with kpi3: kpi_metric("จำนวนบริษัท FA", df_processed['ลำดับที่'].count(), '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m-3-1l-3-1m-3 1l-3 1" /></svg>')
+    
     vis_col1, vis_col2 = st.columns([1.8, 1.2])
     with vis_col1:
-        with st.container(border=True, height=520):
+        with st.container(border=True, height=450):
             st.subheader("สถานะคำขอที่กำลังดำเนินการ")
             df_ongoing = df_filtered[df_filtered['CurrentStage'] != 'ได้รับอนุญาต'].sort_values(by="วันที่ยื่นคำขอ")
-            html_content = generate_application_list_html(df_ongoing, st.session_state.num_items_to_show, len(df_ongoing))
+            html_content = generate_application_list_html_optimized(df_ongoing, st.session_state.num_items_to_show, len(df_ongoing))
             st.markdown(html_content, unsafe_allow_html=True)
 
     with vis_col2:
-        with st.container(border=True, height=520):
+        with st.container(border=True, height=450):
             st.subheader("สถิติ FA ตามประเภทคำขอ")
             if not df_filtered.empty:
                 chart_data = df_filtered.groupby(['คำนำหน้า', 'ApplicationType'], observed=True).size().unstack(fill_value=0)
@@ -296,20 +378,36 @@ with right_col:
                     colors = {'รายใหม่': '#3B82F6', 'ต่ออายุ': '#FBBF24'}
                     app_types_in_order = [col for col in ['ต่ออายุ', 'รายใหม่'] if col in chart_data.columns]
                     for app_type in app_types_in_order:
-                        fig.add_trace(go.Bar(x=chart_data.index, y=chart_data[app_type], name=app_type, marker_color=colors.get(app_type)))
-                    fig.update_layout(barmode='stack', bargap=0.2, margin=dict(l=10, r=10, t=50, b=10), height=400, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1), plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', yaxis=dict(showgrid=True, gridcolor='#E5E7EB'), font=dict(family='Sarabun, sans-serif'))
+                        fig.add_trace(go.Bar(
+                            x=chart_data.index,
+                            y=chart_data[app_type],
+                            name=app_type,
+                            marker_color=colors.get(app_type),
+                            text=chart_data[app_type],
+                            textposition='auto'
+                        ))
+                    fig.update_layout(
+                        barmode='stack',
+                        bargap=0.2,
+                        margin=dict(l=10, r=10, t=50, b=10),
+                        height=350,
+                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        yaxis=dict(showgrid=True, gridcolor='#E5E7EB')
+                    )
                     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
                 else:
-                    st.markdown("<div style='height: 380px; display: flex; align-items: center; justify-content: center;'><p class='text-center text-gray-500'>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height:380px;display:flex;align-items:center;justify-content:center'><p class='text-center text-gray-500'>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
             else:
-                st.markdown("<div style='height: 380px; display: flex; align-items: center; justify-content: center;'><p class='text-center text-gray-500'>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height:380px;display:flex;align-items:center;justify-content:center'><p class='text-center text-gray-500'>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
 
     with st.container(border=True):
-        st.subheader(f"รายชื่อ บ. FA ที่จะต่ออายุปี 2568 ทั้งหมด/ รายละเอียดทั้งหมด")
+        st.subheader(f"รายชื่อ บ. FA ทั้งหมด")
         df_display = df_processed if st.session_state.active_filter == 'ทั้งหมด' else df_filtered
-        st.dataframe(df_display, use_container_width=True, height=350, hide_index=True, column_config={
+        st.dataframe(df_display, use_container_width=True, height=280, hide_index=True, column_config={
+            "ลำดับที่": st.column_config.NumberColumn("ลำดับที่", width="small"),
+            "คำนำหน้า": st.column_config.TextColumn("คำนำหน้า", width="small"),
             "Company (FA)": st.column_config.TextColumn("Company (FA)", width="large"),
-            "คำนำหน้า": "คำนำหน้า",
-            "ApplicationType": "ประเภทคำขอ",
+            "ApplicationType": st.column_config.TextColumn("ประเภทคำขอ", width="medium"),
             "progress_percent_raw": st.column_config.ProgressColumn("Progress", format="%d%%", min_value=0, max_value=100),
-        }, column_order=["Company (FA)", "คำนำหน้า", "ApplicationType", "progress_percent_raw"])
+        }, column_order=["ลำดับที่", "คำนำหน้า", "Company (FA)", "ApplicationType", "progress_percent_raw"])
