@@ -195,7 +195,7 @@ class StepperBar:
                 
         html_parts.append("</div>")
         return "".join(html_parts)
-
+    
 def generate_application_list_html_optimized(df_ongoing, num_items_to_show, total_items):
     if df_ongoing.empty:
         return "<div style='height: 300px; display: flex; align-items: center; justify-content: center;'><p class='text-center text-gray-500'>ไม่มีข้อมูลที่กำลังดำเนินการ</p></div>"
@@ -257,16 +257,6 @@ def generate_application_list_html_optimized(df_ongoing, num_items_to_show, tota
         html_items.append(f"<div style='margin-bottom:18px'>{step_html}{status_text}{info_box_html}</div>")
 
     list_html = "<div style='display:flex;flex-direction:column;'>{}</div>".format("".join(html_items))
-
-    if total_items > num_items_to_show:
-        list_html += """
-        <div style="margin-top:16px;">
-            <a href="?show_more=true" target="_self" style="text-decoration:none;">
-                <div style="width:100%;background-color:#3B82F6;color:white;border:none;border-radius:8px;font-weight:600;padding:10px 16px;text-align:center;cursor:pointer;">
-                    เพิ่มเติม...
-                </div>
-            </a>
-        </div>"""
         
     return list_html
 
@@ -460,50 +450,37 @@ with right_col:
         due_soon_count = (df_filtered["วันครบอายุเห็นชอบ"].notna() & (df_filtered["วันครบอายุเห็นชอบ"] <= today + pd.Timedelta(days=45))).sum()
         kpi_metric("ใกล้ครบกำหนด 45 วัน", due_soon_count, '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>')
     with kpi3: kpi_metric("จำนวนบริษัท FA", df_processed['ลำดับที่'].count(), '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m-3-1l-3-1m-3 1l-3 1" /></svg>')
-    
-    vis_col1, vis_col2 = st.columns([1.8, 1.2])
+
+    vis_col1, vis_col2 = st.columns([1.2, 1.0])
     with vis_col1:
-        with st.container(border=True, height=450):
+        with st.container(height=450):
             st.subheader("สถานะคำขอที่กำลังดำเนินการ")
             df_ongoing = df_filtered[df_filtered['CurrentStage'] != 'ได้รับอนุญาต'].sort_values(by="วันที่ยื่นคำขอ")
             html_content = generate_application_list_html_optimized(
                 df_ongoing, st.session_state.num_items_to_show, len(df_ongoing)
             )
             st.markdown(html_content, unsafe_allow_html=True)
-
             if len(df_ongoing) > st.session_state.num_items_to_show:
                 st.markdown("""
                 <style>
-                div.stButton > button#show-more-btn {
-                    width: 100%;
-                    background-color: #3B82F6;
-                    color: white;
-                    border: none;
-                    border-radius: 8px;
-                    font-weight: 600;
-                    padding: 0.7rem 1rem;
-                    text-align: center;
-                    font-size: 18px;
-                    margin-top: 16px;
-                    cursor: pointer;
-                    box-shadow: none;
-                    transition: background 0.2s;
+                [data-testid="stVerticalBlockBorderWrapper"][height="450"] {
+                    border: none !important;
+                    box-shadow: none !important;
                 }
-                div.stButton > button#show-more-btn:hover {
-                    background-color: #2563eb;
-                    color: white;
+                #custom-view-more-btn-wrapper {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin-top: 10px;
+                    margin-bottom: 10px;
                 }
                 </style>
                 """, unsafe_allow_html=True)
-                if st.button("เพิ่มเติม...", key="show_more_applications", help=None, type="secondary"):
-                    st.session_state.num_items_to_show += 2
-                st.markdown("""
-                <script>
-                const btns = window.parent.document.querySelectorAll('button[kind="secondary"]');
-                if (btns.length > 0) { btns[btns.length-1].id = "show-more-btn"; }
-                </script>
-                """, unsafe_allow_html=True)
-
+                st.markdown('<div id="custom-view-more-btn-wrapper">', unsafe_allow_html=True)
+                if st.button('เพิ่มเติม ▶', key="show_more_apps_viewport_final", help=None, type="secondary"):
+                    st.session_state.num_items_to_show += 1
+                st.markdown('</div>', unsafe_allow_html=True)
+                
     with vis_col2:
         with st.container(border=True, height=450):
             st.subheader("สถิติ FA ตามประเภทคำขอ")
@@ -538,7 +515,10 @@ with right_col:
                 st.markdown("<div style='height:380px;display:flex;align-items:center;justify-content:center'><p class='text-center text-gray-500'>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
 
     with st.container(border=True):
-        st.subheader(f"รายชื่อ บ. FA ที่จะต่ออายุปี 2568 ทั้งหมด")
+        if st.session_state.active_filter == 'รายใหม่':
+            st.subheader(f"รายชื่อ บ. FA รายใหม่ปี 2568 ทั้งหมด")
+        else:
+            st.subheader(f"รายชื่อ บ. FA ที่จะต่ออายุปี 2568 ทั้งหมด")
         df_display = df_processed if st.session_state.active_filter == 'ทั้งหมด' else df_filtered
         df_display = df_display.copy()
 
