@@ -202,40 +202,71 @@ def generate_application_list_html_optimized(df_ongoing, num_items_to_show, tota
 
     df_to_show = df_ongoing.head(num_items_to_show).copy()
 
-    conditions = [
-        df_to_show['progress_percent_raw'] >= 100,
-        df_to_show['progress_percent_raw'] > 0
+    custom_dates = [
+        "2/4/2562", "3/1/2562", "4/4/2562", "4/11/2562", "4/26/2562", "5/31/2562",
+        "7/12/2562", "8/8/2562", "8/20/2562", "9/20/2562", "10/11/2562", "11/12/2562",
+        "11/14/2562", "12/27/2562", "2/28/2563", "3/9/2563", "3/17/2563", "3/25/2563",
+        "4/13/2563", "4/23/2563", "5/21/2563", "6/22/2563", "6/23/2563", "6/29/2563",
+        "7/15/2563", "7/20/2563", "7/21/2563", "7/29/2563", "9/2/2563", "9/22/2563",
+        "9/23/2563", "10/28/2563", "11/27/2563", "1/7/2564", "2/3/2564", "2/15/2564",
+        "2/18/2564", "2/19/2564", "4/1/2564", "4/2/2564", "4/7/2564", "4/26/2564",
+        "6/21/2564", "8/23/2564", "10/26/2564", "9/23/2564", "2/14/2565", "3/17/2565",
+        "3/17/2565", "3/28/2565"
     ]
-    df_to_show['step_index'] = np.select(conditions, [2, 1], default=0)
-    df_to_show['expiry_date_formatted'] = df_to_show['วันครบอายุเห็นชอบ'].apply(format_thai_date)
-    
+    df_to_show = df_to_show.reset_index(drop=True)
+    df_to_show["custom_date"] = custom_dates[:len(df_to_show)]
+
+    def get_step_index(progress):
+        if progress >= 100:
+            return 4
+        elif progress >= 75:
+            return 3
+        elif progress >= 50:
+            return 2
+        elif progress > 0:
+            return 1
+        else:
+            return 0
+
+    df_to_show['step_index'] = df_to_show['progress_percent_raw'].apply(get_step_index)
     df_to_show.rename(columns={'Company (FA)': 'Company_FA'}, inplace=True)
 
-    stepper = StepperBar(steps=['ยื่นคำขอ', 'พิจารณา', 'อนุมัติ'])
     html_items = []
+    for idx, row in enumerate(df_to_show.itertuples(index=False)):
+        step_html = "<div style='display:flex;align-items:center;gap:12px;margin-bottom:2px;'>"
+        for i in range(5):
+            if i <= row.step_index:
+                circle = "<div style='width:24px;height:24px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;'><svg width='16' height='16'><circle cx='8' cy='8' r='7' fill='white'/><path d='M5 9l2 2 4-4' stroke='#22c55e' stroke-width='2' fill='none'/></svg></div>"
+            else:
+                circle = "<div style='width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid #e5e7eb;'></div>"
+            step_html += circle
+            if i < 4:
+                step_html += "<div style='flex:1;height:4px;background:{};border-radius:2px;'></div>".format(
+                    "#22c55e" if i < row.step_index else "#e5e7eb"
+                )
+        step_html += "</div>"
 
-    for row in df_to_show.itertuples(index=False):
-        stepper.set_current_step(row.step_index)
-        stepper_html = stepper.display()
-        
+        status_text = "<div style='color:#374151;font-weight:600;font-size:15px;margin-bottom:4px;'>กำลังดำเนินการให้ความเห็นชอบ</div>"
         info_box_html = f"""
-        <div class="bg-gray-50 border border-gray-200 p-3 rounded-lg mt-4">
-            <div class="flex justify-between items-center">
-                <span class="font-semibold text-sm text-gray-800">{row.Company_FA}</span>
-                <span class="font-mono text-sm text-gray-600">{row.expiry_date_formatted}</span>
-            </div>
-        </div>"""
-        html_items.append(f"<div>{stepper_html}{info_box_html}</div>")
+        <div style="background:#f3f4f6;border-radius:8px;padding:10px 16px;margin-bottom:8px;">
+            <div style="font-size:15px;color:#111827;font-weight:500;">{row.Company_FA}</div>
+            <div style="font-size:13px;color:#6b7280;">{row.custom_date}</div>
+        </div>
+        """
 
-    list_html = "<div class='flex flex-col space-y-8'>{}</div>".format("".join(html_items))
-    
+        html_items.append(f"<div style='margin-bottom:18px'>{step_html}{status_text}{info_box_html}</div>")
+
+    list_html = "<div style='display:flex;flex-direction:column;'>{}</div>".format("".join(html_items))
+
     if total_items > num_items_to_show:
         list_html += """
-        <a href="?show_more=true" target="_self" style="display: block; text-decoration: none; margin-top: 1.5rem;">
-            <div style="width: 100%; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: 600; padding: 0.5rem 1rem; text-align: center;">
-                เพิ่มเติม...
-            </div>
-        </a>"""
+        <div style="margin-top:16px;">
+            <a href="?show_more=true" target="_self" style="text-decoration:none;">
+                <div style="width:100%;background-color:#3B82F6;color:white;border:none;border-radius:8px;font-weight:600;padding:10px 16px;text-align:center;cursor:pointer;">
+                    เพิ่มเติม...
+                </div>
+            </a>
+        </div>"""
         
     return list_html
 
@@ -435,8 +466,43 @@ with right_col:
         with st.container(border=True, height=450):
             st.subheader("สถานะคำขอที่กำลังดำเนินการ")
             df_ongoing = df_filtered[df_filtered['CurrentStage'] != 'ได้รับอนุญาต'].sort_values(by="วันที่ยื่นคำขอ")
-            html_content = generate_application_list_html_optimized(df_ongoing, st.session_state.num_items_to_show, len(df_ongoing))
+            html_content = generate_application_list_html_optimized(
+                df_ongoing, st.session_state.num_items_to_show, len(df_ongoing)
+            )
             st.markdown(html_content, unsafe_allow_html=True)
+
+            if len(df_ongoing) > st.session_state.num_items_to_show:
+                st.markdown("""
+                <style>
+                div.stButton > button#show-more-btn {
+                    width: 100%;
+                    background-color: #3B82F6;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    padding: 0.7rem 1rem;
+                    text-align: center;
+                    font-size: 18px;
+                    margin-top: 16px;
+                    cursor: pointer;
+                    box-shadow: none;
+                    transition: background 0.2s;
+                }
+                div.stButton > button#show-more-btn:hover {
+                    background-color: #2563eb;
+                    color: white;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                if st.button("เพิ่มเติม...", key="show_more_applications", help=None, type="secondary"):
+                    st.session_state.num_items_to_show += 2
+                st.markdown("""
+                <script>
+                const btns = window.parent.document.querySelectorAll('button[kind="secondary"]');
+                if (btns.length > 0) { btns[btns.length-1].id = "show-more-btn"; }
+                </script>
+                """, unsafe_allow_html=True)
 
     with vis_col2:
         with st.container(border=True, height=450):
@@ -474,7 +540,22 @@ with right_col:
     with st.container(border=True):
         st.subheader(f"รายชื่อ บ. FA ที่จะต่ออายุปี 2568 ทั้งหมด")
         df_display = df_processed if st.session_state.active_filter == 'ทั้งหมด' else df_filtered
-        
+        df_display = df_display.copy()
+
+        custom_dates = [
+            "2/4/2562", "3/1/2562", "4/4/2562", "4/11/2562", "4/26/2562", "5/31/2562",
+            "7/12/2562", "8/8/2562", "8/20/2562", "9/20/2562", "10/11/2562", "11/12/2562",
+            "11/14/2562", "12/27/2562", "2/28/2563", "3/9/2563", "3/17/2563", "3/25/2563",
+            "4/13/2563", "4/23/2563", "5/21/2563", "6/22/2563", "6/23/2563", "6/29/2563",
+            "7/15/2563", "7/20/2563", "7/21/2563", "7/29/2563", "9/2/2563", "9/22/2563",
+            "9/23/2563", "10/28/2563", "11/27/2563", "1/7/2564", "2/3/2564", "2/15/2564",
+            "2/18/2564", "2/19/2564", "4/1/2564", "4/2/2564", "4/7/2564", "4/26/2564",
+            "6/21/2564", "8/23/2564", "10/26/2564", "9/23/2564", "2/14/2565", "3/17/2565",
+            "3/17/2565", "3/28/2565"
+        ]
+
+        df_display["วันที่ยื่นคำขอ"] = custom_dates[:len(df_display)]
+
         st.dataframe(
             df_display,
             use_container_width=True,
@@ -497,9 +578,8 @@ with right_col:
                     "ประเภทคำขอ",
                     width="medium"
                 ),
-                "วันที่ยื่นคำขอ": st.column_config.DateColumn(
+                "วันที่ยื่นคำขอ": st.column_config.TextColumn(
                     "วันที่ยื่นคำขอ",
-                    format="MM/DD/YYYY",
                     width="medium"
                 ),
                 "progress_percent_raw": st.column_config.ProgressColumn(
