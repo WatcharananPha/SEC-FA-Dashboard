@@ -12,26 +12,120 @@ LOGO_PATH = "SEC_Thailand_Logo.svg.png"
 
 st.set_page_config(layout="wide", page_title="FA Approval Dashboard", page_icon=LOGO_PATH)
 
+st.markdown(
+    """
+    <style>
+    .clear-cache-btn {
+        margin-bottom: 18px;
+        margin-top: 0px;
+        display: flex;
+        justify-content: flex-end;
+    }
+    </style>
+    """, unsafe_allow_html=True
+)
+
+with st.sidebar:
+    st.markdown('<div class="clear-cache-btn">', unsafe_allow_html=True)
+    if st.button("🧹 ล้างแคช Streamlit", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
     :root {
-        --primary-color: #3B82F6; --primary-color-light: #DBEAFE;
-        --success-color: #16A34A; --warning-color: #FBBF24; --danger-color: #EF4444;
-        --text-color-dark: #1F2937; --text-color-light: #6B7280; --text-color-header: #374151;
-        --background-color: #F9FAFB; --container-bg-color: #FFFFFF; --border-color: #E5E7EB;
+        --primary-color: #3B82F6; 
+        --primary-color-light: #DBEAFE;
+        --success-color: #16A34A; 
+        --warning-color: #FBBF24; 
+        --danger-color: #EF4444;
+        --text-color-dark: #1F2937; 
+        --text-color-light: #6B7280; 
+        --text-color-header: #374151;
+        --background-color: #F0F2F5; /* Updated background base color */
+        --container-bg-color: #FFFFFF; 
+        --border-color: #E5E7EB;
+        --card-shadow: 0 2px 8px 0 rgba(31,41,55,0.06);
     }
+
     html, body, [class*="st-"], [class*="css-"] {
-        font-family: 'Sarabun', sans-serif; background-color: var(--background-color);
+        font-family: 'Sarabun', sans-serif;
+        /* --- New Gradient Background --- */
+        background-color: var(--background-color); /* Fallback for older browsers */
+        background-image: linear-gradient(135deg, #e6f7ff 0%, #f3f4f6 50%, #fffbe6 100%);
+        background-attachment: fixed; /* Ensures the gradient stays in place on scroll */
     }
-    #MainMenu, footer, header { display: none; }
+
+    #MainMenu, footer, header { 
+        display: none; 
+    }
+
     .main .block-container {
-        padding-top: 1rem; padding-bottom: 1rem; padding-left: 2.5rem; padding-right: 2.5rem;
+        padding-top: 1rem; 
+        padding-bottom: 1rem; 
+        padding-left: 2.5rem; 
+        padding-right: 2.5rem;
     }
+
     [data-testid="stHorizontalBlock"] {
         align-items: center;
     }
-    /* --- CSS for Radio as Button Group --- */
+
+    /* --- Card/Container Styling --- */
+    .st-emotion-cache-1r6slb0, [data-testid="stMetric"], .st-emotion-cache-1wivapv,
+    .st-emotion-cache-1wivapv, .st-emotion-cache-1r6slb0, .st-emotion-cache-1wivapv, .st-emotion-cache-1r6slb0,
+    .custom-card, .custom-card-right {
+        background-color: var(--container-bg-color);
+        border: 1.5px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* KPI metric card */
+    .kpi-metric { 
+        text-align: left;
+        background-color: var(--container-bg-color); 
+        border: 1.5px solid var(--border-color);
+        border-radius: 16px; 
+        padding: 1.25rem 1.5rem;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 1.5rem;
+    }
+
+    /* DataFrame/Table border */
+    .stDataFrame, .st-emotion-cache-1y4p8pa {
+        border: 1.5px solid var(--border-color) !important;
+        border-radius: 16px !important;
+        box-shadow: var(--card-shadow) !important;
+        background: var(--container-bg-color) !important;
+    }
+
+    /* Plotly Chart border */
+    .js-plotly-plot, .stPlotlyChart {
+        border: 1.5px solid var(--border-color) !important;
+        border-radius: 16px !important;
+        box-shadow: var(--card-shadow) !important;
+        background: var(--container-bg-color) !important;
+        padding: 0.5rem !important;
+    }
+
+    /* --- Button Styles --- */
+    /* View more button */
+    #custom-view-more-btn-wrapper button {
+        border-radius: 8px !important;
+        border: 1.5px solid var(--primary-color) !important;
+        background: var(--primary-color-light) !important;
+        color: var(--primary-color) !important;
+        font-weight: 600 !important;
+        box-shadow: var(--card-shadow) !important;
+        padding: 0.5rem 1.5rem !important;
+    }
+
+    /* Radio as Button Group */
     div[role="radiogroup"] {
         display: flex;
         background-color: #E5E7EB;
@@ -39,6 +133,7 @@ st.markdown("""
         padding: 3px;
         width: fit-content;
     }
+
     div[role="radiogroup"] label {
         display: flex;
         background-color: transparent;
@@ -50,66 +145,74 @@ st.markdown("""
         transition: all 0.2s ease-in-out;
         cursor: pointer;
     }
+
     div[role="radiogroup"] input[type="radio"] {
         display: none;
     }
+
     div[role="radiogroup"] input[type="radio"]:checked + div {
         background-color: var(--primary-color-light);
         color: var(--primary-color);
     }
-    /* --- End Radio CSS --- */
-    .st-emotion-cache-1r6slb0, [data-testid="stMetric"], .st-emotion-cache-1wivapv {
-        background-color: var(--container-bg-color); border: 1px solid var(--border-color);
-        border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
-        padding: 1.25rem 1.5rem;
+
+    /* --- Typography and Layout --- */
+    div[data-testid="stMultiSelect"] [data-baseweb="tag"] {
+        color: var(--text-color-dark) !important;
     }
-    h3, h6 { color: var(--text-color-header); font-weight: 600; }
-    h3 { font-size: 1.1rem; padding-bottom: 0.75rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
-    h6 { font-size: 0.95rem; margin-bottom: 0.5rem; }
+
+    h3, h6 { 
+        color: var(--text-color-header); 
+        font-weight: 600; 
+    }
+
+    h3 { 
+        font-size: 1.1rem; 
+        padding-bottom: 0.75rem; 
+        margin-bottom: 1rem; 
+        border-bottom: 1px solid var(--border-color); 
+    }
+
+    h6 { 
+        font-size: 0.95rem; 
+        margin-bottom: 0.5rem; 
+    }
+
     div[data-testid="stHorizontalBlock"] {
         gap: 1.5rem; 
     }
 
-    .kpi-metric { 
-        text-align: left;
-        background-color: var(--container-bg-color); 
-        border: 1px solid var(--border-color);
-        border-radius: 12px; 
-        padding: 1.25rem 1.5rem;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
-        margin-bottom: 1.5rem; /* << เพิ่มบรรทัดนี้ */
-    }
-
-    [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > div:first-child .st-emotion-cache-1r6slb0 {
-        margin-bottom: 1.5rem;
-    }
+    /* --- KPI Metric Elements --- */
     .kpi-title { 
-        font-size: 1.2rem; /* เพิ่มขนาดจาก 0.9rem */
+        font-size: 1.2rem;
         font-weight: 600; 
         color: var(--text-color-light); 
         display: flex; 
         align-items: center; 
         gap: 10px;
     }
+
     .kpi-value { 
         font-size: 2.5rem;
         font-weight: 700; 
         color: var(--text-color-header);
         margin-top: 8px; 
     }
+
     .kpi-icon { 
         background-color: var(--primary-color-light); 
-        border-radius: 10px; /* เพิ่มความโค้งมน */
-        padding: 10px; /* เพิ่มขนาดกรอบ */
+        border-radius: 10px;
+        padding: 10px;
         display: flex; 
         align-items: center; 
         justify-content: center; 
     }
+
     .kpi-icon svg { 
-        width: 24px; /* เพิ่มขนาดไอคอน */
-        height: 24px; /* เพิ่มขนาดไอคอน */
+        width: 24px;
+        height: 24px;
         color: var(--primary-color); 
     }
+    
 </style> """, unsafe_allow_html=True)
 
 @st.cache_data
@@ -217,48 +320,47 @@ def generate_application_list_html_optimized(df_ongoing, num_items_to_show, tota
     df_to_show["custom_date"] = custom_dates[:len(df_to_show)]
 
     def get_step_index(progress):
-        if progress >= 100:
-            return 4
-        elif progress >= 75:
-            return 3
-        elif progress >= 50:
-            return 2
-        elif progress > 0:
-            return 1
-        else:
-            return 0
+        if progress >= 100: return 4
+        elif progress >= 75: return 3
+        elif progress >= 50: return 2
+        elif progress > 0: return 1
+        else: return 0
 
     df_to_show['step_index'] = df_to_show['progress_percent_raw'].apply(get_step_index)
     df_to_show.rename(columns={'Company (FA)': 'Company_FA'}, inplace=True)
 
     html_items = []
-    for idx, row in enumerate(df_to_show.itertuples(index=False)):
-        step_html = "<div style='display:flex;align-items:center;gap:12px;margin-bottom:2px;'>"
-        for i in range(5):
-            if i <= row.step_index:
-                circle = "<div style='width:24px;height:24px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;'><svg width='16' height='16'><circle cx='8' cy='8' r='7' fill='white'/><path d='M5 9l2 2 4-4' stroke='#22c55e' stroke-width='2' fill='none'/></svg></div>"
-            else:
-                circle = "<div style='width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid #e5e7eb;'></div>"
-            step_html += circle
-            if i < 4:
-                step_html += "<div style='flex:1;height:4px;background:{};border-radius:2px;'></div>".format(
-                    "#22c55e" if i < row.step_index else "#e5e7eb"
-                )
-        step_html += "</div>"
+    for row in df_to_show.itertuples(index=False):
+        progress_bar_container_style = "position:relative; display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;"
+        track_line_style = "position:absolute; top:50%; transform: translateY(-50%); left:12px; right:12px; height:4px; background:#e5e7eb; z-index:1;"
+        track_line_html = f"<div style='{track_line_style}'></div>"
+        progress_percent = (row.step_index / 4) * 100 if row.step_index > 0 else 0
+        progress_line_style = f"position:absolute; top:50%; transform: translateY(-50%); left:12px; width:calc({progress_percent}% - {12 * (progress_percent/100)}px); height:4px; background:#22c55e; z-index:1;"
+        progress_line_html = f"<div style='{progress_line_style}'></div>" if progress_percent > 0 else ""
 
+        circles_html = ""
+        for i in range(5):
+            is_active = i <= row.step_index
+            if is_active:
+                style = "width:24px; height:24px; border-radius:50%; background:#22c55e; display:flex; align-items:center; justify-content:center; z-index:2;"
+                icon = "<svg width='16' height='16' viewBox='0 0 16 16'><path d='M5 8l2.5 2.5L12 6' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/></svg>"
+                circles_html += f"<div style='{style}'>{icon}</div>"
+            else:
+                style = "width:24px; height:24px; border-radius:50%; background:#fff; border:2px solid #e5e7eb; z-index:2;"
+                circles_html += f"<div style='{style}'></div>"
+
+        step_html = f"<div style='{progress_bar_container_style}'>{track_line_html}{progress_line_html}{circles_html}</div>"
         status_text = "<div style='color:#374151;font-weight:600;font-size:15px;margin-bottom:4px;'>กำลังดำเนินการให้ความเห็นชอบ</div>"
         info_box_html = f"""
-        <div style="background:#f3f4f6;border-radius:8px;padding:10px 16px;margin-bottom:8px;">
-            <div style="font-size:15px;color:#111827;font-weight:500;">{row.Company_FA}</div>
-            <div style="font-size:13px;color:#6b7280;">{row.custom_date}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#f9fafb; border-radius:8px; padding:12px 16px; margin-bottom:8px; border: 1px solid #f3f4f6;">
+            <div style="font-size:15px; color:#111827; font-weight:500;">{row.Company_FA}</div>
+            <div style="font-size:13px; color:#6b7280;">{row.custom_date}</div>
         </div>
         """
-
         html_items.append(f"<div style='margin-bottom:18px'>{step_html}{status_text}{info_box_html}</div>")
 
-    list_html = "<div style='display:flex;flex-direction:column;'>{}</div>".format("".join(html_items))
-        
-    return list_html
+    list_html = "".join(html_items)
+    return f"<div style='display:flex;flex-direction:column;'>{list_html}</div>"
 
 def kpi_metric(title, value, icon_svg):
     st.markdown(f"""
@@ -324,7 +426,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 left_col, right_col = st.columns([1, 2.8])
 
 with left_col: 
-    st.markdown("<h6>Status % คำขอ</h6>", unsafe_allow_html=True)
+    st.markdown("<h6 style='color: #000;'>Status % คำขอ</h6>", unsafe_allow_html=True)
     status_options = {
         'ดำเนินการ 0 %': 0,
         'ดำเนินการ 25 %': 25,
@@ -340,9 +442,9 @@ with left_col:
         label_visibility="collapsed"
     )
 
-    selected_values = [status_options[label] for label in selected_labels]
+    selected_status_values = [status_options[label] for label in selected_labels]
 
-    st.markdown("<h6 style='margin-top: 1rem;'>สถิติแบ่งตาม Quarter</h6>", unsafe_allow_html=True)
+    st.markdown("<h6 style='margin-top: 1rem; color: #000;'>สถิติแบ่งตาม Quarter</h6>", unsafe_allow_html=True)
 
     quarter_options = {
         'ทั้งหมด': 'all',
@@ -352,44 +454,26 @@ with left_col:
         'Quarter 4': 4
     }
 
-    default_selection = []
-    if st.session_state.quarter_filters.get('all', True):
-        default_selection.append('ทั้งหมด')
-    else:
-        reverse_quarter_map = {v: k for k, v in quarter_options.items()}
-        for key, selected in st.session_state.quarter_filters.items():
-            if selected and key != 'all':
-                default_selection.append(reverse_quarter_map.get(key))
-
-    selected_labels = st.multiselect(
+    selected_labels_quarter = st.multiselect(
         'Filter by Quarter',
         options=list(quarter_options.keys()),
-        default=default_selection,
         placeholder="เลือก Quarter...",
         label_visibility="collapsed"
     )
 
-    selected_values = [quarter_options[label] for label in selected_labels]
-    is_all_selected = 'all' in selected_values or not selected_values
-    st.session_state.quarter_filters['all'] = is_all_selected
-
-    for i in range(1, 5):
-        st.session_state.quarter_filters[i] = (not is_all_selected) and (i in selected_values)
+    selected_quarter_values = [quarter_options[label] for label in selected_labels_quarter]
+    is_all_selected = 'all' in selected_quarter_values or not selected_quarter_values
 
     df_filtered = df_processed.copy()
     if st.session_state.active_filter != 'ทั้งหมด':
         df_filtered = df_filtered[df_filtered['ApplicationType'] == st.session_state.active_filter]
-    
-    selected_statuses = [k for k, v in st.session_state.status_filters.items() if v]
-    if selected_statuses:
-        df_filtered = df_filtered[df_filtered['progress_group'].isin(selected_statuses)]
-    
-    if not st.session_state.quarter_filters.get('all', True):
-        selected_quarters = [k for k, v in st.session_state.quarter_filters.items() if v and k != 'all']
-        if selected_quarters:
-            df_filtered = df_filtered[df_filtered['Quarter'].isin(selected_quarters)]
 
-    with st.container(border=True): 
+    if selected_status_values:
+        df_filtered = df_filtered[df_filtered['progress_group'].isin(selected_status_values)]
+
+    if not is_all_selected:
+        df_filtered = df_filtered[df_filtered['Quarter'].isin([q for q in selected_quarter_values if q != 'all'])]
+    with st.container(border=True):
         st.subheader("สถิติบริษัท FA แยกจำนวน")
         fa_type_counts = df_filtered["คำนำหน้า"].value_counts()
         if not fa_type_counts.empty:
@@ -397,9 +481,15 @@ with left_col:
             fig = go.Figure(data=[go.Pie(labels=fa_type_counts.index, values=fa_type_counts.values, hole=.7,
                 marker=dict(colors=colors, line=dict(color='#ffffff', width=2)),
                 hoverinfo='label+value', textinfo='value', textposition='inside', showlegend=False, textfont_size=14)])
-            fig.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=280,
-                annotations=[dict(text=f'{fa_type_counts.sum()}', x=0.5, y=0.5, font_size=30, showarrow=False, font_color="#1F2937")])
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            
+            fig.update_layout(
+                margin=dict(t=10, b=10, l=10, r=10),
+                width=400, 
+                height=320,
+                annotations=[dict(text=f'{fa_type_counts.sum()}', x=0.5, y=0.5, font_size=30, showarrow=False, font_color="#1F2937")]
+            )
+            
+            st.plotly_chart(fig, use_container_width=False, config={'displayModeBar': False})
             
             for (fa_type, count), color in zip(fa_type_counts.items(), colors):
                 st.markdown(f"""
@@ -422,25 +512,34 @@ with left_col:
                 "ไร้สังกัด": count_no_affiliation
             })
             
+            colors = ['#1f77b4', '#ff7f0e']
+
             fig_controller = go.Figure(go.Bar(
                 x=controller_counts.values,
                 y=controller_counts.index,
                 orientation='h',
-                marker_color='#6B7280',
+                marker_color=colors,
                 text=controller_counts.values,
                 textposition='inside',
                 insidetextanchor='end',
-                textfont=dict(color='white', size=14)
+                textfont=dict(color='black', size=14)
             ))
             fig_controller.update_layout(
+                width=400,
                 height=150,
                 margin=dict(t=10, b=10, l=10, r=10),
                 plot_bgcolor='rgba(0,0,0,0)',
-                xaxis=dict(visible=False),
-                yaxis=dict(autorange="reversed"),
+                xaxis=dict(visible=False, color='black', tickfont=dict(color='black')),  # เพิ่ม color
+                yaxis=dict(autorange="reversed", color='black', tickfont=dict(color='black')),  # เพิ่ม color
                 showlegend=False
             )
-            st.plotly_chart(fig_controller, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fig_controller, use_container_width=False, config={'displayModeBar': False})
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(label="มีสังกัด", value=f"{count_with_affiliation} คน")
+            with col2:
+                st.metric(label="ไร้สังกัด", value=f"{count_no_affiliation} คน")
 
 with right_col:
     kpi1, kpi2, kpi3 = st.columns(3)
@@ -453,7 +552,7 @@ with right_col:
 
     vis_col1, vis_col2 = st.columns([1.2, 1.0])
     with vis_col1:
-        with st.container(height=450):
+        with st.container(height=650):
             st.subheader("สถานะคำขอที่กำลังดำเนินการ")
             df_ongoing = df_filtered[df_filtered['CurrentStage'] != 'ได้รับอนุญาต'].sort_values(by="วันที่ยื่นคำขอ")
             html_content = generate_application_list_html_optimized(
@@ -463,7 +562,7 @@ with right_col:
             if len(df_ongoing) > st.session_state.num_items_to_show:
                 st.markdown("""
                 <style>
-                [data-testid="stVerticalBlockBorderWrapper"][height="450"] {
+                [data-testid="stVerticalBlockBorderWrapper"][height="650"] {
                     border: none !important;
                     box-shadow: none !important;
                 }
@@ -482,7 +581,7 @@ with right_col:
                 st.markdown('</div>', unsafe_allow_html=True)
                 
     with vis_col2:
-        with st.container(border=True, height=450):
+        with st.container(border=True, height=650):
             st.subheader("สถิติ FA ตามประเภทคำขอ")
             if not df_filtered.empty:
                 chart_data = df_filtered.groupby(['คำนำหน้า', 'ApplicationType'], observed=True).size().unstack(fill_value=0)
@@ -503,16 +602,17 @@ with right_col:
                         barmode='stack',
                         bargap=0.2,
                         margin=dict(l=10, r=10, t=50, b=10),
-                        height=350,
+                        width=550,
+                        height=500,
                         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                         plot_bgcolor='rgba(0,0,0,0)',
                         yaxis=dict(showgrid=True, gridcolor='#E5E7EB')
                     )
-                    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                    st.plotly_chart(fig, use_container_width=False, config={'displayModeBar': False})
                 else:
-                    st.markdown("<div style='height:380px;display:flex;align-items:center;justify-content:center'><p class='text-center text-gray-500'>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height:480px;display:flex;align-items:center;justify-content:center'><p class='text-center text-gray-500'>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
             else:
-                st.markdown("<div style='height:380px;display:flex;align-items:center;justify-content:center'><p class='text-center text-gray-500'>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height:480px;display:flex;align-items:center;justify-content:center'><p class='text-center text-gray-500'>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
 
     with st.container(border=True):
         if st.session_state.active_filter == 'รายใหม่':
