@@ -36,7 +36,7 @@ st.markdown("""
         --text-color-dark: #1F2937; 
         --text-color-light: #6B7280; 
         --text-color-header: #374151;
-        --background-color: #FFFFFF; /* Updated background base color */
+        --background-color: #F0F2F5; /* Updated background base color */
         --container-bg-color: #FFFFFF; 
         --border-color: #E5E7EB;
         --card-shadow: 0 2px 8px 0 rgba(31,41,55,0.06);
