@@ -24,13 +24,6 @@ st.markdown(
     """, unsafe_allow_html=True
 )
 
-with st.sidebar:
-    st.markdown('<div class="clear-cache-btn">', unsafe_allow_html=True)
-    if st.button("🧹 ล้างแคช Streamlit", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
