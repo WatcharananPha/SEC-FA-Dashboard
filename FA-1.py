@@ -561,10 +561,6 @@ with right_col:
             if len(df_ongoing) > st.session_state.num_items_to_show:
                 st.markdown("""
                 <style>
-                [data-testid="stVerticalBlockBorderWrapper"][height="650"] {
-                    border: none !important;
-                    box-shadow: none !important;
-                }
                 #custom-view-more-btn-wrapper {
                     display: flex;
                     justify-content: center;
