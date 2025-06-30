@@ -369,7 +369,7 @@ def kpi_metric(title, value, icon_svg):
     </div>""", unsafe_allow_html=True)
 
 df_processed = load_and_prepare_data("testdata/FA-1 (ปี 2565)(test).xlsx")
-df_controller = load_controller_data("testdata\FA-2 (ปี 2565)(test).xlsx")
+df_controller = load_controller_data("testdata/FA-2 (ปี 2565)(test).xlsx")
 
 if 'active_filter' not in st.session_state: st.session_state.active_filter = 'ทั้งหมด'
 if 'num_items_to_show' not in st.session_state: st.session_state.num_items_to_show = 2
