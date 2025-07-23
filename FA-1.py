@@ -113,6 +113,28 @@ st.markdown("""
         display: flex;
         justify-content: center;
     }
+    /* สร้าง Wrapper สำหรับตกแต่งช่องค้นหาโดยเฉพาะ */
+    .search-wrapper .stTextInput > div {
+        border: 1.5px solid var(--border-color) !important;
+        background-color: var(--container-bg-color);
+        border-radius: 16px !important;  /* ความโค้งของกรอบ */
+        box-shadow: var(--card-shadow);
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    /* เพิ่มเอฟเฟกต์เมื่อผู้ใช้คลิกที่ช่องค้นหา */
+    .search-wrapper .stTextInput > div:focus-within {
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 3px var(--primary-color-light);
+    }
+
+    /* ปรับแก้ input field ที่อยู่ด้านใน */
+    .search-wrapper .stTextInput input {
+        border: none !important;
+        background-color: transparent;
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+    }
 </style> """, unsafe_allow_html=True)
 
 @st.cache_data
@@ -247,7 +269,34 @@ with logo_col:
         st.markdown(f'<img src="data:image/png;base64,{b64_logo}" style="height: 120px;">', unsafe_allow_html=True)
 
 with search_col:
-    company_search = st.text_input("ค้นหาชื่อบริษัท FA...", placeholder="พิมพ์ชื่อบริษัทเพื่อค้นหา", label_visibility="collapsed")
+    st.markdown("""
+        <style>
+        .search-wrapper input {
+            border: 2px solid black; /* กรอบสีดำ */
+            border-radius: 8px;     /* มุมโค้ง */
+            padding: 10px 14px;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        /* ป้องกัน Streamlit override style ตอน focus */
+        .search-wrapper input:focus {
+            border: 2px solid red; /* คงกรอบไว้ */
+            box-shadow: none;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="search-wrapper">', unsafe_allow_html=True)
+
+    company_search = st.text_input(
+        "ค้นหาชื่อบริษัท FA...",
+        placeholder="พิมพ์ชื่อบริษัทเพื่อค้นหา",
+        label_visibility="collapsed"
+    )
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def set_filter(filter_name):
     st.session_state.active_filter = filter_name
@@ -321,7 +370,8 @@ with left_col:
             st.markdown("<div class='center-chart' style='height:480px; align-items:center;'><p>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
 
     with st.container(border=True):
-        st.subheader("สถิติจำนวนผู้ควบคุม")
+        st.markdown("<h3 style='text-align: center; border-bottom: none; margin-bottom: 0.5rem;'>สถิติจำนวนผู้ควบคุม</h3>", unsafe_allow_html=True)
+
         if not df_controller.empty and "คำนำหน้า" in df_controller.columns:
             count_no_affiliation = (df_controller["คำนำหน้า"] == "ไร้สังกัด").sum()
             count_with_affiliation = (df_controller["คำนำหน้า"] != "ไร้สังกัด").sum()
