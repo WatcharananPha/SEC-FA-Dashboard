@@ -106,6 +106,13 @@ st.markdown("""
         height: 20px;
         color: var(--primary-color);
     }
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 16px;
+    }
+    .center-chart {
+        display: flex;
+        justify-content: center;
+    }
 </style> """, unsafe_allow_html=True)
 
 @st.cache_data
@@ -282,15 +289,37 @@ with left_col:
     if not is_all_selected:
         df_filtered = df_filtered[df_filtered['Quarter'].isin([q for q in selected_quarter_values if q != 'all'])]
     with st.container(border=True):
-        st.subheader("สถิติบริษัท FA แยกจำนวน")
+        st.markdown("<h3 style='text-align: center; border-bottom: none; margin-bottom: 0.5rem;'>สถิติบริษัท FA แยกจำนวน</h3>", unsafe_allow_html=True)
+        
         fa_type_counts = df_filtered["คำนำหน้า"].value_counts()
         if not fa_type_counts.empty:
             colors = ['#FBBF24', '#60A5FA', '#34D399', '#A78BFA']
-            fig = go.Figure(data=[go.Pie(labels=fa_type_counts.index, values=fa_type_counts.values, hole=.7, marker=dict(colors=colors, line=dict(color='#ffffff', width=2)), hoverinfo='label+value', textinfo='value', textposition='inside', textfont_size=14)])
-            fig.update_layout(margin=dict(t=10, b=10, l=10, r=10), width=400, height=320, annotations=[dict(text=f'{fa_type_counts.sum()}', x=0.5, y=0.5, font_size=30, showarrow=False, font_color="#1F2937")])
+            fig = go.Figure(data=[go.Pie(
+                labels=fa_type_counts.index, 
+                values=fa_type_counts.values, 
+                hole=.7, 
+                marker=dict(colors=colors, line=dict(color='#ffffff', width=2)), 
+                hoverinfo='label+value', 
+                textinfo='value', 
+                textposition='inside', 
+                textfont_size=14
+            )])
+            fig.update_layout(
+                margin=dict(t=10, b=10, l=10, r=10), 
+                width=400,
+                height=320, 
+                annotations=[dict(text=f'{fa_type_counts.sum()}', x=0.5, y=0.5, font_size=30, showarrow=False, font_color="#1F2937")],
+                showlegend=True
+            )
+            
+            st.markdown('<div class="center-chart">', unsafe_allow_html=True)
             st.plotly_chart(fig, use_container_width=False, config={'displayModeBar': False})
+            st.markdown('</div>', unsafe_allow_html=True)
             for (fa_type, count), color in zip(fa_type_counts.items(), colors):
-                st.markdown(f"""<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;"><div style="display: flex; align-items: center; gap: 8px;"><span style="height: 10px; width: 10px; background-color: {color}; border-radius: 50%;"></span><span style="font-size: 14px;">{fa_type}</span></div><span style="font-size: 14px; font-weight: 600; color: var(--text-color-light);">{count}</span></div>""", unsafe_allow_html=True)
+                st.markdown(f"""<div style="display: flex; align-items: center; justify-content: space-between; margin: 4px 1rem;"><div style="display: flex; align-items: center; gap: 8px;"><span style="height: 10px; width: 10px; background-color: {color}; border-radius: 50%;"></span><span style="font-size: 14px;">{fa_type}</span></div><span style="font-size: 14px; font-weight: 600; color: var(--text-color-light);">{count}</span></div>""", unsafe_allow_html=True)
+        else:
+            st.markdown("<div class='center-chart' style='height:480px; align-items:center;'><p>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
+
     with st.container(border=True):
         st.subheader("สถิติจำนวนผู้ควบคุม")
         if not df_controller.empty and "คำนำหน้า" in df_controller.columns:
@@ -300,7 +329,11 @@ with left_col:
             colors = ['#1f77b4', '#ff7f0e']
             fig_controller = go.Figure(go.Bar(x=controller_counts.values, y=controller_counts.index, orientation='h', marker_color=colors, text=controller_counts.values, textposition='inside', insidetextanchor='end', textfont=dict(color='black', size=14)))
             fig_controller.update_layout(width=400, height=150, margin=dict(t=10, b=10, l=10, r=10), plot_bgcolor='rgba(0,0,0,0)', xaxis=dict(visible=False, color='black', tickfont=dict(color='black')), yaxis=dict(autorange="reversed", color='black', tickfont=dict(color='black')), showlegend=False)
+
+            st.markdown('<div class="center-chart">', unsafe_allow_html=True)
             st.plotly_chart(fig_controller, use_container_width=False, config={'displayModeBar': False})
+            st.markdown('</div>', unsafe_allow_html=True)
+
             col1, col2 = st.columns(2)
             with col1: st.metric(label="มีสังกัด", value=f"{count_with_affiliation} คน")
             with col2: st.metric(label="ไร้สังกัด", value=f"{count_no_affiliation} คน")
@@ -347,7 +380,11 @@ with right_col:
                         width=550, height=500, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                         plot_bgcolor='rgba(0,0,0,0)', yaxis=dict(showgrid=True, gridcolor='#E5E7EB')
                     )
+                    
+                    st.markdown('<div class="center-chart">', unsafe_allow_html=True)
                     st.plotly_chart(fig, use_container_width=False, config={'displayModeBar': False})
+                    st.markdown('</div>', unsafe_allow_html=True)
+
                 else:
                     st.markdown("<div style='height:480px;display:flex;align-items:center;justify-content:center'><p>ไม่มีข้อมูล</p></div>", unsafe_allow_html=True)
             else:
