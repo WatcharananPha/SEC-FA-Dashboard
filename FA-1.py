@@ -871,8 +871,8 @@ if "active_filter" not in st.session_state:
 if "company_search" not in st.session_state:
     st.session_state.company_search = ""
 
-df_processed = load_and_prepare_data("testdata\\FA-1 (ปี 2565)(test).xlsx")
-df_fa2_progress = load_fa2_progress_data("testdata\\FA-2 (ปี 2565)(test) progress.xlsx")
+df_processed = load_and_prepare_data("testdata\FA-1 (ปี 2565)(test).xlsx")
+df_fa2_progress = load_fa2_progress_data("testdata\FA-2 (ปี 2565)(test) progress.xlsx")
 
 render_header_and_switcher()
 
