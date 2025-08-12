@@ -838,7 +838,7 @@ def render_fa_page(page_type, df_processed, df_fa2):
     }})();
   </script>
 </body></html>
-        """, height=530, width=1020, scrolling=False)
+        """, height=570, width=1020, scrolling=False)
     st.markdown('</div>', unsafe_allow_html=True)
 
 today = datetime.now().strftime("%d/%m/%Y")
