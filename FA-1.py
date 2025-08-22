@@ -26,6 +26,46 @@ st.markdown(
 st.markdown(
     """
 <style>
+@media (max-width: 1100px) {
+  .main .block-container {padding:1rem 0.5rem !important;}
+  .header-grid, .fa-header, .content-grid {
+    grid-template-columns: 1fr !important;
+    display: block !important;
+  }
+  .content-grid {gap: 1rem;}
+  .kpi-card, .framed-panel, .card {min-width: 0 !important; width: 100% !important;}
+  .plotly-graph-div, .js-plotly-plot {width: 100% !important;}
+}
+@media (max-width: 800px) {
+  .main .block-container {padding:0.5rem 0.2rem !important;}
+  .header-grid, .fa-header, .content-grid {
+    grid-template-columns: 1fr !important;
+    display: block !important;
+  }
+  .kpi-card, .framed-panel, .card {min-width: 0 !important; width: 100% !important;}
+  .plotly-graph-div, .js-plotly-plot {width: 100% !important;}
+  .custom-footer-date {
+    position: static !important;
+    margin: 16px 0 0 0 !important;
+    text-align: center !important;
+    font-size: 16px !important;
+  }
+}
+@media (max-width: 600px) {
+  .main .block-container {padding:0.1rem 0.1rem !important;}
+  .header-grid, .fa-header, .content-grid {
+    grid-template-columns: 1fr !important;
+    display: block !important;
+  }
+  .kpi-card, .framed-panel, .card {min-width: 0 !important; width: 100% !important;}
+  .plotly-graph-div, .js-plotly-plot {width: 100% !important;}
+  .custom-footer-date {
+    position: static !important;
+    margin: 12px 0 0 0 !important;
+    text-align: center !important;
+    font-size: 14px !important;
+  }
+}
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap');
 :root {
     --primary-color: #00A99D;
@@ -80,7 +120,6 @@ html, body, [class*="st-"], [class*="css-"] {
 .pill-buttons {
     display: flex;
     gap: 0.75rem;
-}
 }
 .page-controls-grid {
     display: grid;
@@ -308,8 +347,6 @@ html, body, [class*="st-"], [class*="css-"] {
     align-items: center;
     margin: 6px 0 14px;
 }
-
-/* ====== GLOBAL HEADER (ทุกหน้าใช้ร่วมกัน) ====== */
 .search-area .stTextInput > div{
     height:56px;
     border-radius:12px;
@@ -320,8 +357,6 @@ html, body, [class*="st-"], [class*="css-"] {
     height:56px;
     font-size:16px;
 }
-
-/* Dropdown FA-1/FA-2/FA Dashboard Summary – ใหญ่และชัด */
 .page-dropdown [data-baseweb="select"] span {
     font-size: 40px !important;
     font-weight: 800;
@@ -335,8 +370,6 @@ html, body, [class*="st-"], [class*="css-"] {
 .page-dropdown [data-baseweb="select"] div {
     font-size: 40px !important;
 }
-
-/* ปุ่มตัวกรอง – ความสูง/สไตล์เดียวกับ search */
 .pill-buttons-row .stButton>button{
     height:56px;
     padding:0 18px;
@@ -350,8 +383,6 @@ html, body, [class*="st-"], [class*="css-"] {
 .pill-buttons-row .stButton>button:hover{
     border-color:#CBD5E1;
 }
-
-/* Extra FA header tweaks */
 .fa-header .search-area .stTextInput>div{
     height:48px;
     border-radius:12px;
@@ -374,9 +405,8 @@ html, body, [class*="st-"], [class*="css-"] {
 .fa-header .pill-buttons .stButton>button:hover{
     border-color:#CBD5E1;
 }
-    .header-logo img, .fa-header .header-logo img {
-        height: 200px !important;
-    }
+.header-logo img, .fa-header .header-logo img {
+    height: 200px !important;
 }
 </style>
 """,
@@ -389,7 +419,16 @@ def load_and_prepare_data(file_path: str):
     try:
         df = pd.read_excel(file_path, engine="openpyxl")
     except Exception:
-        df = pd.DataFrame({ "ให้ความเห็นชอบ FA": ["เอ บจก.", "บี บล.", "ซี ธนาคาร", "ดี ลูก บล."], "ประเภทคำขอ": ["รายใหม่", "ต่ออายุ", "รายใหม่", "ต่ออายุ"], "วันที่ยื่นคำขอ": pd.to_datetime(["2024-11-10", "2024-12-01", "2025-01-03", "2025-01-15"]), "วันที่ตรวจประวัติ": pd.to_datetime([None, "2024-12-10", None, None]), "วันที่อนุญาต": pd.to_datetime([None, None, None, None]), "วันครบอายุเห็นชอบ": pd.to_datetime(["2025-12-15", "2025-10-10", "2026-01-05", "2025-11-20"]), "dashboard": ["25%", "50%", "75%", "0%"], })
+        df = pd.DataFrame({
+            "ให้ความเห็นชอบ FA": ["เอ บจก.", "บี บล.", "ซี ธนาคาร", "ดี ลูก บล."],
+            "ประเภทคำขอ": ["รายใหม่", "ต่ออายุ", "รายใหม่", "ต่ออายุ"],
+            "วันที่ยื่นคำขอ": pd.to_datetime(["2024-11-10", "2024-12-01", "2025-01-03", "2025-01-15"]),
+            "วันที่ตรวจประวัติ": pd.to_datetime([None, "2024-12-10", None, None]),
+            "วันที่อนุญาต": pd.to_datetime([None, None, None, None]),
+            "วันครบอายุเห็นชอบ": pd.to_datetime([None, "2025-10-10", None, "2025-11-20"]),
+            "dashboard": ["25%", "50%", "75%", "0%"],
+        })
+
     df.columns = df.columns.str.strip()
     date_cols = ["วันครบอายุเห็นชอบ", "วันที่ยื่นคำขอ", "วันที่ตรวจประวัติ", "วันที่อนุญาต"]
     for col in date_cols:
@@ -398,11 +437,17 @@ def load_and_prepare_data(file_path: str):
             mask = s.dt.year.gt(2300).fillna(False)
             s.loc[mask] = s.loc[mask] - pd.DateOffset(years=543)
             df[col] = s
-            if col == "วันครบอายุเห็นชอบ":
-                df["display_date"] = s.dt.strftime("%-d/%-m/%Y").fillna("N/A") if hasattr(s.dt, "strftime") else "N/A"
-    if "display_date" not in df.columns: df["display_date"] = "N/A"
+
+    expiry_dates_str = df['วันครบอายุเห็นชอบ'].dt.strftime('%-d/%-m/%Y')
+    app_dates_str = df['วันที่ยื่นคำขอ'].dt.strftime('%-d/%-m/%Y')
+    df['display_date'] = expiry_dates_str.fillna(app_dates_str).fillna("%-d/%-m/%Y")
     df["progress_percent_raw"] = (pd.to_numeric(df.get("dashboard", "0").astype(str).str.replace("%","",regex=False), errors="coerce").fillna(0))
-    df["Company (FA)"] = (df.get("ให้ความเห็นชอบ FA", pd.Series(dtype=str)).astype(str).str.split("\n", n=1).str[0].str.replace('"',"",regex=False).str.strip())
+    df["Company (FA)"] = (df.get("ให้ความเห็นชอบ FA", pd.Series(dtype=str))
+                          .astype(str)
+                          .str.split("\n", n=1).str[0]
+                          .str.replace('"',"",regex=False)
+                          .str.strip())
+
     df["ApplicationType"] = np.where(df.get("ให้ความเห็นชอบ FA", pd.Series(dtype=str)).astype(str).str.contains("เสมือนรายใหม่", na=False), "รายใหม่", df.get("ประเภทคำขอ",""))
     stage_conditions = [df.get("วันที่อนุญาต", pd.Series(index=df.index)).notna(), df.get("วันที่ตรวจประวัติ", pd.Series(index=df.index)).notna(), df.get("วันที่ยื่นคำขอ", pd.Series(index=df.index)).notna()]
     df["CurrentStage"] = np.select(stage_conditions, ["ได้รับอนุญาต","ตรวจประวัติ","ยื่นคำขอ"], default="N/A")
@@ -425,47 +470,98 @@ def load_fa2_progress_data(file_path: str):
     return df
 
 def generate_application_list_html(df_ongoing, num_items_to_show, is_fa2_list=False):
-    if df_ongoing.empty: return "<div style='height:300px; display:flex; align-items:center; justify-content:center; color:#6B7280;'>ไม่มีข้อมูลที่กำลังดำเนินการ</div>"
+    if df_ongoing.empty:
+        return "<div style='height:300px; display:flex; align-items:center; justify-content:center; color:#6B7280;'>ไม่มีข้อมูลที่กำลังดำเนินการ</div>"
+    
     df_to_show = df_ongoing.head(num_items_to_show).copy()
-    if "progress_percent_raw" not in df_to_show.columns: df_to_show["progress_percent_raw"] = np.random.choice([25, 50, 75, 100], size=len(df_to_show))
+    if "progress_percent_raw" not in df_to_show.columns:
+        df_to_show["progress_percent_raw"] = np.random.choice([25, 50, 75, 100], size=len(df_to_show))
+
     def step_idx(p):
-        if p >= 100: return 4;
-        if p >= 75: return 3;
-        if p >= 50: return 2;
-        if p > 0:   return 1;
+        if p >= 100: return 4
+        if p >= 75: return 3
+        if p >= 50: return 2
+        if p > 0:   return 1
         return 0
+
     html = []
     for _, row in df_to_show.iterrows():
         idx = step_idx(row.get("progress_percent_raw", 0))
         bar = "<div style='position:relative; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;'>"
         bar += "<div style='position:absolute; top:50%; transform:translateY(-50%); left:12px; right:12px; height:4px; background:#e5e7eb; z-index:1;'></div>"
-        pct = (idx/4)*100 if idx>0 else 0
-        if pct>0: bar += f"<div style='position:absolute; top:50%; transform:translateY(-50%); left:12px; width:calc({pct}% - 12px); height:4px; background:var(--primary-color); z-index:1;'></div>"
+        pct = (idx / 4) * 100 if idx > 0 else 0
+        if pct > 0:
+            bar += f"<div style='position:absolute; top:50%; transform:translateY(-50%); left:12px; width:calc({pct}% - 12px); height:4px; background:var(--primary-color); z-index:1;'></div>"
         for i in range(5):
-            active = i<=idx
+            active = i <= idx
             style = f"width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:2; background:{'var(--primary-color)' if active else '#fff'}; border:2px solid {'var(--primary-color)' if active else '#e5e7eb'};"
             icon = "<svg width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2' stroke-linecap='round'><path d='M5 8l2.5 2.5L12 6'/></svg>" if active else ""
             bar += f"<div style='{style}'>{icon}</div>"
         bar += "</div>"
+        
         status = "<div style='font-weight:600; font-size:1rem; color:#374151; margin-bottom:4px;'>กำลังดำเนินการให้ความเห็นชอบ</div>"
         name = row.get("Company (FA)", "N/A")
-        right = row.get("company_affiliation_text", "") if is_fa2_list else row.get("display_date", "")
+        
+        if is_fa2_list:
+            right = row.get("company_affiliation_text", "")
+        else:
+            expire_date = row.get("วันครบอายุเห็นชอบ", "")
+            if pd.notnull(expire_date) and str(expire_date) != "NaT" and str(expire_date) != "nan" and expire_date != "":
+                if hasattr(expire_date, "strftime"):
+                    right = expire_date.strftime("%d/%m/%Y")
+                else:
+                    right = str(expire_date)
+            else:
+                right = "-"
         info = f"""<div class="info-row"><div class="name">{name}</div><div class="meta">{right}</div></div>"""
         html.append(f"<div class='list-item'>{status}{bar}{info}</div>")
+        
     return "".join(html)
 
 def render_controller_stats_chart():
+    cats = ["มีสังกัด", "ไร้สังกัด"]
+    vals = [518, 7]
+    colors = ["#60F3FE", "#B2EBF2"]
+    max_y = max(vals)
+    step = 100 if max_y >= 300 else 50
+    upper = int(np.ceil(max_y / step) * step)
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=["มีสังกัด"], y=[518], marker_color="#60F3FE", text="518", textposition="outside"))
-    fig.add_trace(go.Bar(x=["ไร้สังกัด"], y=[7], marker_color="#B2EBF2", text="7", textposition="outside"))
+    fig.add_trace(go.Bar(
+        x=[cats[0]], y=[vals[0]], name=cats[0],
+        marker_color=colors[0],
+        text=str(vals[0]), textposition="outside",
+        textfont=dict(size=14, color="#1F2937")
+    ))
+    fig.add_trace(go.Bar(
+        x=[cats[1]], y=[vals[1]], name=cats[1],
+        marker_color=colors[1],
+        text=str(vals[1]), textposition="outside",
+        textfont=dict(size=14, color="#1F2937")
+    ))
+
     fig.update_layout(
-        showlegend=False, barmode="group", height=300,
-        margin=dict(t=10, b=20, l=10, r=10),
-        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-        yaxis=dict(showgrid=True, gridcolor="#E5E7EB", range=[0, 650]),
-        xaxis=dict(showline=False),
-        uniformtext_minsize=12, uniformtext_mode="hide"
+        showlegend=False,
+        barmode="group",
+        height=300,
+        margin=dict(t=20, b=20, l=50, r=10),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(showline=False, tickfont=dict(size=14)),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor="#E5E7EB",
+            range=[0, upper],
+            tickmode="linear",
+            dtick=step,
+            tickformat=",d",
+            zeroline=True,
+            zerolinecolor="#E5E7EB",
+            tickfont=dict(size=12)
+        ),
+        uniformtext_minsize=12,
+        uniformtext_mode="hide"
     )
+
     chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn", config={"displayModeBar": False})
     components.html(f"""
     <style>
@@ -474,60 +570,68 @@ def render_controller_stats_chart():
         border-radius: 16px;
         background: #FFFFFF;
         padding: 16px 16px 8px 16px;
-        box-shadow: 0 2px 0 rgba(0,0,0,0.02);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        height: 100%;
         max-width: 100%;
       }}
       .chart-header {{
-        margin: 0 0 8px 0;
-        font-size: 20px;
-        font-weight: 700;
+        margin: 0 0 8px 4px;
+        font-size: 22px;
+        font-weight: 800;
+        color: #111827;
+        text-align: center;
       }}
       .chart-legend {{
-        display: flex; gap: 24px; align-items: center;
-        margin: 4px 0 8px 4px; font-size: 12px; color: #111827;
+          display: flex;
+          justify-content: center;
+          gap: 48px;
+          align-items: center;
+          margin: 4px 0 12px 0;
+          font-size: 14px;
+          font-weight: 500;
+          color: #374151;
       }}
       .legend-item {{ display: flex; align-items: center; gap: 8px; }}
-      .legend-square {{ width: 10px; height: 10px; border-radius: 2px; display: inline-block; }}
+      .legend-dot {{ width: 12px; height: 12px; border-radius: 50%; display: inline-block; }}
       .plotly-graph-div, .js-plotly-plot {{ width: 100% !important; }}
     </style>
     <div class="framed-panel">
       <h2 class="chart-header">ข้อมูลจำนวนผู้ควบคุมการปฏิบัติงาน</h2>
       <div class="chart-legend">
-        <div class="legend-item"><span class="legend-square" style="background-color:#60F3FE;"></span>มีสังกัด</div>
-        <div class="legend-item"><span class="legend-square" style="background-color:#B2EBF2;"></span>ไร้สังกัด</div>
+        <div class="legend-item"><span class="legend-dot" style="background-color:{colors[0]};"></span>{cats[0]}</div>
+        <div class="legend-item"><span class="legend-dot" style="background-color:{colors[1]};"></span>{cats[1]}</div>
       </div>
-      {chart_html}
+      <div style="display: flex; justify-content: center;">
+        <div style="width: 80%; margin: 0 auto;">
+          {chart_html}
+        </div>
+      </div>
     </div>
     """, height=600, width=970, scrolling=False)
 
 def render_fa_type_pie_chart(df):
     type_map = {
-        "บล.": lambda x: x.strip() == "บล.",
-        "บจก.": lambda x: x.strip() == "บจก.",
+        "บล.": lambda x: "บล." in x and "ลูก" not in x,
+        "บจก.": lambda x: "บจก." in x,
         "ธนาคาร": lambda x: "ธนาคาร" in x or "ธ." in x,
         "ลูก บล.": lambda x: "ลูก" in x and "บล." in x
     }
+    
     if "คำนำหน้า" in df.columns:
         type_col = df["คำนำหน้า"].astype(str)
     elif "ให้ความเห็นชอบ FA" in df.columns:
-        def extract_prefix(row):
-            val = str(row)
-            if "ธนาคาร" in val or "ธ." in val:
-                return "ธนาคาร"
-            elif "ลูก" in val and "บล." in val:
-                return "ลูก บล."
-            elif "บล." in val:
-                return "บล."
-            elif "บจก." in val:
-                return "บจก."
+        def extract_prefix(val_str):
+            val_str = str(val_str)
+            if "ธนาคาร" in val_str or "ธ." in val_str: return "ธนาคาร"
+            if "ลูก" in val_str and "บล." in val_str: return "ลูก บล."
+            if "บล." in val_str: return "บล."
+            if "บจก." in val_str: return "บจก."
             return "อื่นๆ"
         type_col = df["ให้ความเห็นชอบ FA"].apply(extract_prefix)
     else:
         return
 
-    fa_counts = {}
-    for group, func in type_map.items():
-        fa_counts[group] = sum(type_col.apply(func))
+    fa_counts = {group: sum(type_col.apply(func)) for group, func in type_map.items()}
     colors = ["#60F3FE", "#3AADDF", "#1060AA", "#10456F"]
     fig = go.Figure(data=[
         go.Pie(
@@ -543,13 +647,18 @@ def render_fa_type_pie_chart(df):
     ])
     total = sum(fa_counts.values())
     fig.update_layout(
-        showlegend=False, height=300,
+        showlegend=False,
+        height=300,
         margin=dict(t=10, b=10, l=10, r=10),
-        annotations=[dict(text=str(total), x=0.5, y=0.5, font_size=48,
-                          showarrow=False, font_color="#1F2937", yanchor="middle")],
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+        annotations=[dict(
+            text=f"<b>{total}</b>",
+            x=0.5, y=0.5, font_size=48, showarrow=False,
+            font_color="#1F2937", yanchor="middle"
+        )],
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)"
     )
-    chart_html = fig.to_html(full_html=False, include_plotlyjs="inline", config={"displayModeBar": False})
+    chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn", config={"displayModeBar": False})
     components.html(f"""
     <style>
       .framed-panel {{
@@ -557,100 +666,112 @@ def render_fa_type_pie_chart(df):
         border-radius: 16px;
         background: #FFFFFF;
         padding: 16px 16px 8px 16px;
-        box-shadow: 0 2px 0 rgba(0,0,0,0.02);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        height: 100%;
         max-width: 100%;
       }}
       .chart-header {{
-        margin: 0 0 8px 0;
-        font-size: 20px;
-        font-weight: 700;
+        margin: 0 0 8px 4px;
+        font-size: 22px;
+        font-weight: 800;
+        color: #111827;
+        text-align: center;
       }}
-      .chart-legend {{ display: flex; gap: 24px; align-items: center; margin: 4px 0 8px 4px; font-size: 12px; color: #111827; }}
+      .chart-legend {{
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 16px 24px;
+          align-items: center;
+          margin: 4px 0 12px 4px;
+          font-size: 14px;
+          font-weight: 500;
+          color: #374151;
+      }}
       .legend-item {{ display: flex; align-items: center; gap: 8px; }}
-      .legend-dot {{ width: 10px; height: 10px; border-radius: 50%; display: inline-block; }}
+      .legend-dot {{ width: 12px; height: 12px; border-radius: 50%; display: inline-block; }}
       .plotly-graph-div, .js-plotly-plot {{ width: 100% !important; }}
     </style>
     <div class="framed-panel">
       <h2 class="chart-header">ข้อมูลบริษัท FA แยกตามประเภท</h2>
       <div class="chart-legend">
-        <div class="legend-item"><span class="legend-dot" style="background-color:#60F3FE;"></span>บล.</div>
-        <div class="legend-item"><span class="legend-dot" style="background-color:#3AADDF;"></span>บจก.</div>
-        <div class="legend-item"><span class="legend-dot" style="background-color:#1060AA;"></span>ธนาคาร</div>
-        <div class="legend-item"><span class="legend-dot" style="background-color:#10456F;"></span>ลูก บล.</div>
+        <div class="legend-item"><span class="legend-dot" style="background-color:{colors[0]};"></span>บล.</div>
+        <div class="legend-item"><span class="legend-dot" style="background-color:{colors[1]};"></span>บจก.</div>
+        <div class="legend-item"><span class="legend-dot" style="background-color:{colors[2]};"></span>ธนาคาร</div>
+        <div class="legend-item"><span class="legend-dot" style="background-color:{colors[3]};"></span>ลูก บล.</div>
       </div>
-      {chart_html}
+      <div style="display: flex; justify-content: center;">
+        <div style="width: 80%; margin: 0 auto;">
+          {chart_html}
+        </div>
+      </div>
     </div>
-    """, height=600, width=970, scrolling=False)
+    """, height=670, width=970)
 
 def render_fa_app_type_bar_chart(df):
-    # กำหนด mapping กลุ่มประเภท FA
     categories = ["ธนาคาร", "บจก.", "บล."]
     app_types = ["รายใหม่", "ต่ออายุ"]
+    colors = {"รายใหม่": "#4285F4", "ต่ออายุ": "#FBBC05"}
 
-    # ฟังก์ชันดึงประเภทบริษัท
     def extract_fa_type(row):
-        if "คำนำหน้า" in df.columns:
-            val = str(row["คำนำหน้า"])
-        else:
-            val = str(row["ให้ความเห็นชอบ FA"])
-            if "ธนาคาร" in val or "ธ." in val:
-                return "ธนาคาร"
-            elif "บจก." in val:
-                return "บจก."
-            elif "บล." in val:
-                return "บล."
-            else:
-                return "อื่นๆ"
-        if "ธนาคาร" in val or "ธ." in val:
-            return "ธนาคาร"
-        elif "บจก." in val:
-            return "บจก."
-        elif "บล." in val:
-            return "บล."
-        else:
-            return "อื่นๆ"
+        val = str(row["คำนำหน้า"] if "คำนำหน้า" in df.columns else row["ให้ความเห็นชอบ FA"])
+        if "ธนาคาร" in val or "ธ." in val: return "ธนาคาร"
+        if "บจก." in val: return "บจก."
+        if "บล." in val: return "บล."
+        return "อื่นๆ"
 
-    # ฟิลเตอร์เฉพาะ 3 กลุ่มหลัก
     filtered = df.copy()
     filtered["FA_TYPE"] = filtered.apply(extract_fa_type, axis=1)
     filtered = filtered[filtered["FA_TYPE"].isin(categories)]
     filtered["AppType"] = filtered["ประเภทคำขอ"].replace("", "ไม่ระบุ").fillna("ไม่ระบุ")
 
-    # สร้าง dict สำหรับนับ
-    data_count = {cat: {tp: 0 for tp in app_types} for cat in categories}
-    for _, row in filtered.iterrows():
-        cat = row["FA_TYPE"]
-        tp = row["AppType"] if row["AppType"] in app_types else "ไม่ระบุ"
-        if cat in categories and tp in app_types:
-            data_count[cat][tp] += 1
+    data_count = {c: {t: 0 for t in app_types} for c in categories}
+    for _, r in filtered.iterrows():
+        if r["FA_TYPE"] in categories and r["AppType"] in app_types:
+            data_count[r["FA_TYPE"]][r["AppType"]] += 1
 
-    new_vals = [data_count[cat]["รายใหม่"] for cat in categories]
-    renew_vals = [data_count[cat]["ต่ออายุ"] for cat in categories]
-
+    new_vals   = [data_count[c]["รายใหม่"] for c in categories]
+    renew_vals = [data_count[c]["ต่ออายุ"] for c in categories]
+    
+    totals = [a + b for a, b in zip(new_vals, renew_vals)]
+    max_stack = max(totals + [1])
+    step = 5 if max_stack <= 25 else (10 if max_stack <= 50 else 20)
+    upper = int(np.ceil(max_stack / step) * step)
     fig = go.Figure()
-    fig.add_trace(go.Bar(
-        name="รายใหม่", x=categories, y=new_vals,
-        marker_color="#4285F4", text=new_vals, textposition="inside",
-        textfont=dict(size=12, color="white")
-    ))
+    
     fig.add_trace(go.Bar(
         name="ต่ออายุ", x=categories, y=renew_vals,
-        marker_color="#FBBC05", text=renew_vals, textposition="inside",
-        textfont=dict(size=12, color="white")
+        marker_color=colors["ต่ออายุ"], text=renew_vals,
+        textposition="inside", textfont=dict(size=12, color="#333")
     ))
-    max_y = max(new_vals + renew_vals + [10])
+    
+    fig.add_trace(go.Bar(
+        name="รายใหม่", x=categories, y=new_vals,
+        marker_color=colors["รายใหม่"], text=new_vals,
+        textposition="inside", textfont=dict(size=12, color="white")
+    ))
     fig.update_layout(
-        barmode="stack", showlegend=False, height=300,
-        margin=dict(t=10, b=20, l=10, r=10),
-        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-        yaxis=dict(showgrid=True, gridcolor="#E5E7EB", range=[0, max_y + 2]),
-        xaxis=dict(showline=False), uniformtext_minsize=10
+        barmode="stack",
+        showlegend=False,
+        height=300,
+        margin=dict(t=20, b=20, l=40, r=10), 
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(showline=False, tickfont=dict(size=14)),
+        yaxis=dict(
+            showgrid=True, gridcolor="#E5E7EB",
+            range=[0, upper],
+            tickmode="linear",
+            dtick=step,
+            tickformat=",d",
+            zeroline=True, zerolinecolor="#E5E7EB",
+            tickfont=dict(size=12)
+        ),
+        uniformtext_minsize=10
     )
-    chart_html = fig.to_html(
-        full_html=False,
-        include_plotlyjs="inline",
-        config={"displayModeBar": False}
-    )
+
+    chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn", config={"displayModeBar": False})
+
     components.html(f"""
     <style>
       .framed-panel {{
@@ -658,29 +779,44 @@ def render_fa_app_type_bar_chart(df):
         border-radius: 16px;
         background: #FFFFFF;
         padding: 16px 16px 8px 16px;
-        box-shadow: 0 2px 0 rgba(0,0,0,0.02);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        height: 100%;
         max-width: 100%;
       }}
       .chart-header {{
-        margin: 0 0 8px 0; font-size: 20px; font-weight: 700;
+        margin: 0 0 8px 4px;
+        font-size: 22px;
+        font-weight: 800;
+        color: #111827;
+        text-align: center;
       }}
       .chart-legend {{
-        display:flex; gap:24px; align-items:center;
-        margin:4px 0 8px 4px; font-size:12px; color:#111827;
+          display: flex;
+          justify-content: center;
+          gap: 24px;
+          align-items: center;
+          margin: 4px 0 12px 0;
+          font-size: 14px;
+          font-weight: 500;
+          color: #374151;
       }}
-      .legend-item {{ display:flex; align-items:center; gap:8px; }}
-      .legend-square {{ width:10px; height:10px; border-radius:2px; display:inline-block; }}
+      .legend-item {{ display: flex; align-items: center; gap: 8px; }}
+      .legend-square {{ width: 12px; height: 12px; border-radius: 2px; display: inline-block; }}
       .plotly-graph-div, .js-plotly-plot {{ width: 100% !important; }}
     </style>
     <div class="framed-panel">
       <h2 class="chart-header">สถิติ FA ตามประเภทคำขอ</h2>
       <div class="chart-legend">
-        <div class="legend-item"><span class="legend-square" style="background-color:#4285F4;"></span>รายใหม่</div>
-        <div class="legend-item"><span class="legend-square" style="background-color:#FBBC05;"></span>ต่ออายุ</div>
+        <div class="legend-item"><span class="legend-square" style="background-color:{colors['รายใหม่']};"></span>รายใหม่</div>
+        <div class="legend-item"><span class="legend-square" style="background-color:{colors['ต่ออายุ']};"></span>ต่ออายุ</div>
       </div>
-      {chart_html}
+      <div style="display: flex; justify-content: center;">
+        <div style="width: 80%; margin: 0 auto;">
+          {chart_html}
+        </div>
+      </div>
     </div>
-    """, height=600, width=970, scrolling=False)
+    """, height=670, width=970)
 
 def set_page(page_name):
     st.session_state.current_page = page_name
@@ -735,7 +871,7 @@ def render_kpi_header():
         {"icon": "history", "title": "จำนวนที่อยู่ระหว่างขอความเห็นชอบ", "value": "25"},
         {"icon": "task_alt", "title": "จำนวนคำขอที่ดำเนินแล้วเสร็จ", "value": "10"},
         {"icon": "inventory_2", "title": "จำนวนบริษัท ฯ ที่ต้องเตรียมยื่นคำขอ", "value": "15"},
-        {"icon": "event_available", "title": "จำนวนคำขอปี 2568 ที่ดำเนินการรวม", "value": "45"},
+        {"icon": "event_available", "title": "จำนวนคำขอปี 2568 ที่ดำเนินการรวม", "value": "50"},
     ]
     for i, k in enumerate(kpis):
         with kpi_cols[i]:
